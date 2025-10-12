@@ -1,0 +1,14 @@
+{
+  "playlists": [
+    {
+      "url": "https://www.youtube.com/playlist?list=PLUmRr21IDW9VOlWwIcr1Foyj2pMh-Jvpb",
+      "save_path": "R:/localtracks/darkzoul",
+      "archive": "archive.txt"
+    }
+  ],
+  "yt_dlp_path": "yt-dlp.exe",
+  "ffmpeg_path": "ffmpeg.exe",
+  "aria2c_path": "aria2c.exe",
+  "max_parallel_downloads": 10,
+  "aria2c_connections": 8
+}
