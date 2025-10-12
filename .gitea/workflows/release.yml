@@ -1,0 +1,95 @@
+name: Build Release Packages
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          sudo apt-get update
+          sudo apt-get install -y unzip zip
+
+      # ---------------- Windows Package ----------------
+      - name: Prepare Windows package
+        run: |
+          set -e
+          mkdir -p dist/windows
+          cp yt-playlist-main.py dist/windows/
+          cp yt-playlist-config.json dist/windows/
+
+          # Download latest yt-dlp for Windows
+          curl -L -o dist/windows/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+
+          # Download FFmpeg Windows (AMD64 static)
+          curl -L -o dist/windows/ffmpeg.zip https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+          unzip -q dist/windows/ffmpeg.zip -d dist/windows/ffmpeg_temp
+          mv $(find dist/windows/ffmpeg_temp -name ffmpeg.exe | head -n 1) dist/windows/ffmpeg.exe
+
+          # Download and extract aria2c Windows
+          curl -L -o dist/windows/aria2c.zip https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
+          unzip dist/windows/aria2c.zip -d dist/windows/
+          mv dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe dist/windows/aria2c.exe
+
+          # Zip everything
+          cd dist/windows
+          zip -r ../../yt-playlist-windows-${CI_COMMIT_TAG}.zip *
+
+      # ---------------- Linux Package ----------------
+      - name: Prepare Linux package
+        run: |
+          set -e
+          mkdir -p dist/linux
+          cp yt-playlist-main.py dist/linux/
+          cp yt-playlist-config.json dist/linux/
+
+          # Download latest yt-dlp for Linux
+          curl -L -o dist/linux/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          chmod +x dist/linux/yt-dlp
+
+          # Download FFmpeg Linux AMD64 static
+          curl -L -o dist/linux/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+          mkdir -p dist/linux/ffmpeg_temp
+          tar -xf dist/linux/ffmpeg.tar.xz -C dist/linux/ffmpeg_temp --strip-components=1
+          mv dist/linux/ffmpeg_temp/ffmpeg dist/linux/ffmpeg
+          chmod +x dist/linux/ffmpeg
+
+          # Download and extract aria2c Linux
+          curl -L -o dist/linux/aria2c.tar.gz https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
+          mkdir -p dist/linux/aria2c_temp
+          tar -xzf dist/linux/aria2c.tar.gz -C dist/linux/aria2c_temp
+          mv dist/linux/aria2c_temp/aria2-1.37.0/src/aria2c dist/linux/aria2c
+          chmod +x dist/linux/aria2c
+
+          # Zip everything
+          cd dist/linux
+          zip -r ../../yt-playlist-linux-${CI_COMMIT_TAG}.zip *
+
+      # ---------------- Clean up ----------------
+      - name: Clean up
+        run: |
+          set -e
+          rm -rf dist/windows/ffmpeg_temp dist/windows/aria2-1.37.0-win-64bit-build1
+          rm -rf dist/linux/ffmpeg_temp dist/linux/aria2c_temp
+
+      # ---------------- Upload Release Assets ----------------
+      - name: Upload release assets
+        uses: gitea/action-release@v1
+        with:
+          files: |
+            yt-playlist-windows-${CI_COMMIT_TAG}.zip
+            yt-playlist-linux-${CI_COMMIT_TAG}.zip
