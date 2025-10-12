@@ -88,7 +88,7 @@ jobs:
 
       # ---------------- Upload Release Assets ----------------
       - name: Upload release assets
-        uses: gitea/action-release@v1
+        uses: actions/release@v1
         with:
           files: |
             yt-playlist-windows-${CI_COMMIT_TAG}.zip
