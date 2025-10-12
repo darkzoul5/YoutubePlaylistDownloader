@@ -2,10 +2,49 @@ name: Build Release Packages
 
 on:
   push:
+    branches:
+      - main
     #tags:
       #- "v*"
 
 jobs:
+  determine-next-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      next_tag: ${{ steps.set_tag.outputs.next_tag }}
+    steps:
+      - name: Checkout code
+        uses: https://gitea.com/actions/checkout@v5
+
+      - name: Determine next version tag
+        id: set_tag
+        run: |
+          git fetch --tags
+
+          LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n1)
+          echo "Latest tag: $LATEST_TAG"
+
+          if [ -z "$LATEST_TAG" ]; then
+            NEXT_TAG="v0.0.1"
+          else
+            PATCH=$(echo $LATEST_TAG | awk -F. '{print $3}')
+            MAJOR=$(echo $LATEST_TAG | awk -F. '{print $1}' | tr -d 'v')
+            MINOR=$(echo $LATEST_TAG | awk -F. '{print $2}')
+            PATCH=$((PATCH+1))
+            NEXT_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          echo "Next tag: $NEXT_TAG"
+          echo "next_tag=$NEXT_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create new tag
+        run: |
+          git config user.name "Gitea Actions"
+          git config user.email "actions@gitea.local"
+          git tag ${{ steps.set_tag.outputs.next_tag }}
+          git push origin ${{ steps.set_tag.outputs.next_tag }}
+
+
   windows-package:
     runs-on: ubuntu-latest
     steps:
