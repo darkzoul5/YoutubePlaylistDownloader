@@ -84,7 +84,7 @@ jobs:
 
           # Zip everything at top level
           cd dist/windows
-          zip -r ../../yt-playlist-windows-${CI_COMMIT_TAG}.zip *
+          zip -r ../../yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip *
           cd ../..
 
       - name: Clean up Windows temp files
@@ -93,7 +93,7 @@ jobs:
       - name: Upload Windows release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: yt-playlist-windows-${CI_COMMIT_TAG}.zip
+          files: yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip
 
   linux-package:
     runs-on: ubuntu-latest
@@ -148,7 +148,7 @@ jobs:
 
           # Zip everything at top level
           cd dist/linux
-          zip -r ../../yt-playlist-linux-${CI_COMMIT_TAG}.zip *
+          zip -r ../../yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip *
           cd ../..
 
       - name: Clean up Linux temp files
@@ -157,4 +157,4 @@ jobs:
       - name: Upload Linux release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: yt-playlist-linux-${CI_COMMIT_TAG}.zip
+          files: yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip
