@@ -121,6 +121,20 @@ jobs:
             autoconf automake libtool gettext autopoint \
             libssl-dev libxml2-dev zlib1g-dev libsqlite3-dev
 
+      - name: Build aria2c Linux static
+        run: |
+          set -e
+          mkdir -p dist/linux/aria2c_build
+          cd dist/linux/aria2c_build
+          wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
+          tar -xzf aria2-1.37.0.tar.gz
+          cd aria2-1.37.0
+          autoreconf -i
+          ./configure ARIA2_STATIC=yes --with-openssl
+          make -j$(nproc)
+          mkdir -p dist/linux/bin
+          cp src/aria2c dist/linux/bin/aria2c
+
       - name: Prepare Linux package
         run: |
           set -e
@@ -141,18 +155,10 @@ jobs:
           mv dist/linux/ffmpeg_temp/ffmpeg dist/linux/bin/ffmpeg
           chmod +x dist/linux/bin/ffmpeg
 
-          # aria2c Linux static
-          mkdir -p dist/linux/aria2c_build
-          cd dist/linux/aria2c_build
-          wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
-          tar -xzf aria2-1.37.0.tar.gz
-          cd aria2-1.37.0
-          autoreconf -i
-          ./configure ARIA2_STATIC=yes --with-openssl
-          make -j$(nproc)
-
-          cp src/aria2c ../../bin/aria2c
-          chmod +x ../../bin/aria2c
+          # Copy built aria2c binary if present
+          if [ -f dist/linux/bin/aria2c ]; then
+            chmod +x dist/linux/bin/aria2c
+          fi
 
           # Remove temp files and downloaded archives before zipping
           rm -rf dist/linux/ffmpeg_temp dist/linux/aria2c_build dist/linux/ffmpeg.tar.xz dist/linux/aria2c_build/aria2-1.37.0.tar.gz
