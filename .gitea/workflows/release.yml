@@ -28,38 +28,38 @@ jobs:
       - name: Prepare Windows package
         run: |
           set -e
-          WORKSPACE="${GITEA_WORKSPACE:-$PWD}"
-          mkdir -p "${GITEA_WORKSPACE:-$PWD}/dist/windows"
-          cp "${GITEA_WORKSPACE:-$PWD}/yt-playlist-main.py" "${GITEA_WORKSPACE:-$PWD}/dist/windows/"
-          cp "${GITEA_WORKSPACE:-$PWD}/yt-playlist-config.json" "${GITEA_WORKSPACE:-$PWD}/dist/windows/"
+          WORKSPACE_ROOT="${GITEA_WORKSPACE:-$PWD}"
+          mkdir -p "$WORKSPACE_ROOT/dist/windows"
+          cp "$WORKSPACE_ROOT/yt-playlist-main.py" "$WORKSPACE_ROOT/dist/windows/"
+          cp "$WORKSPACE_ROOT/yt-playlist-config.json" "$WORKSPACE_ROOT/dist/windows/"
 
-          mkdir -p "${GITEA_WORKSPACE:-$PWD}/dist/windows/bin"
+          mkdir -p "$WORKSPACE_ROOT/dist/windows/bin"
 
           # yt-dlp
-          curl -L -o "${GITEA_WORKSPACE:-$PWD}/dist/windows/bin/yt-dlp.exe" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+          curl -L -o "$WORKSPACE_ROOT/dist/windows/bin/yt-dlp.exe" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
 
           # FFmpeg Windows static
-          curl -L -o "${GITEA_WORKSPACE:-$PWD}/dist/windows/ffmpeg.zip" https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
-          unzip -q "${GITEA_WORKSPACE:-$PWD}/dist/windows/ffmpeg.zip" -d "${GITEA_WORKSPACE:-$PWD}/dist/windows/ffmpeg_temp"
-          mv $(find "${GITEA_WORKSPACE:-$PWD}/dist/windows/ffmpeg_temp" -name ffmpeg.exe | head -n 1) "${GITEA_WORKSPACE:-$PWD}/dist/windows/bin/ffmpeg.exe"
+          curl -L -o "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+          unzip -q "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" -d "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp"
+          mv $(find "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp" -name ffmpeg.exe | head -n 1) "$WORKSPACE_ROOT/dist/windows/bin/ffmpeg.exe"
 
           # aria2c Windows static
-          curl -L -o "${GITEA_WORKSPACE:-$PWD}/dist/windows/aria2c.zip" https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
-          unzip "${GITEA_WORKSPACE:-$PWD}/dist/windows/aria2c.zip" -d "${GITEA_WORKSPACE:-$PWD}/dist/windows/"
-          mv "${GITEA_WORKSPACE:-$PWD}/dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe" "${GITEA_WORKSPACE:-$PWD}/dist/windows/bin/aria2c.exe"
+          curl -L -o "$WORKSPACE_ROOT/dist/windows/aria2c.zip" https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
+          unzip "$WORKSPACE_ROOT/dist/windows/aria2c.zip" -d "$WORKSPACE_ROOT/dist/windows/"
+          mv "$WORKSPACE_ROOT/dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$WORKSPACE_ROOT/dist/windows/bin/aria2c.exe"
 
           # Remove temp files before zipping
-          rm -rf "${GITEA_WORKSPACE:-$PWD}/dist/windows/ffmpeg_temp" "${GITEA_WORKSPACE:-$PWD}/dist/windows/aria2-1.37.0-win-64bit-build1" "${GITEA_WORKSPACE:-$PWD}/dist/windows/ffmpeg.zip" "${GITEA_WORKSPACE:-$PWD}/dist/windows/aria2c.zip"
+          rm -rf "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp" "$WORKSPACE_ROOT/dist/windows/aria2-1.37.0-win-64bit-build1" "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" "$WORKSPACE_ROOT/dist/windows/aria2c.zip"
 
           # Zip everything 
-          cd "${GITEA_WORKSPACE:-$PWD}/dist/windows"
-          zip -r "${GITEA_WORKSPACE:-$PWD}/yt-playlist-windows-${{ gitea.ref_name }}.zip" *
-          cd "${GITEA_WORKSPACE:-$PWD}"
+          cd "$WORKSPACE_ROOT/dist/windows"
+          zip -r "$WORKSPACE_ROOT/yt-playlist-windows-${{ gitea.ref_name }}.zip" *
+          cd "$WORKSPACE_ROOT"
 
       - name: Upload Windows release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: yt-playlist-windows-${{ gitea.ref_name }}.zip
+          files: $WORKSPACE_ROOT/yt-playlist-windows-${{ gitea.ref_name }}.zip
           tag_name: ${{ gitea.ref_name }}
           name: ${{ gitea.ref_name }}
 
@@ -86,30 +86,28 @@ jobs:
       - name: Prepare Linux package
         run: |
           set -e
-          WORKSPACE="${GITEA_WORKSPACE:-$PWD}"
-          mkdir -p "${GITEA_WORKSPACE:-$PWD}/dist/linux"
-          cp "${GITEA_WORKSPACE:-$PWD}/yt-playlist-main.py" "${GITEA_WORKSPACE:-$PWD}/dist/linux/"
-          cp "${GITEA_WORKSPACE:-$PWD}/yt-playlist-config.json" "${GITEA_WORKSPACE:-$PWD}/dist/linux/"
+          WORKSPACE_ROOT="${GITEA_WORKSPACE:-$PWD}"
+          mkdir -p "$WORKSPACE_ROOT/dist/linux"
+          cp "$WORKSPACE_ROOT/yt-playlist-main.py" "$WORKSPACE_ROOT/dist/linux/"
+          cp "$WORKSPACE_ROOT/yt-playlist-config.json" "$WORKSPACE_ROOT/dist/linux/"
 
-          mkdir -p "${GITEA_WORKSPACE:-$PWD}/dist/linux/bin"
+          mkdir -p "$WORKSPACE_ROOT/dist/linux/bin"
 
           # yt-dlp
-          curl -L -o "${GITEA_WORKSPACE:-$PWD}/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
-          chmod +x "${GITEA_WORKSPACE:-$PWD}/dist/linux/bin/yt-dlp"
+          curl -L -o "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          chmod +x "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp"
 
           # FFmpeg Linux static
-          curl -L -o "${GITEA_WORKSPACE:-$PWD}/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-          mkdir -p "${GITEA_WORKSPACE:-$PWD}/dist/linux/ffmpeg_temp"
-          tar -xf "${GITEA_WORKSPACE:-$PWD}/dist/linux/ffmpeg.tar.xz" -C "${GITEA_WORKSPACE:-$PWD}/dist/linux/ffmpeg_temp" --strip-components=1
-          mv "${GITEA_WORKSPACE:-$PWD}/dist/linux/ffmpeg_temp/ffmpeg" "${GITEA_WORKSPACE:-$PWD}/dist/linux/bin/ffmpeg"
-          chmod +x "${GITEA_WORKSPACE:-$PWD}/dist/linux/bin/ffmpeg"
+          curl -L -o "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+          mkdir -p "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp"
+          tar -xf "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" -C "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" --strip-components=1
+          mv "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp/ffmpeg" "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
+          chmod +x "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
 
           # aria2c Linux static
-          mkdir -p "${GITEA_WORKSPACE:-$PWD}/dist/linux/aria2c_build"
-          BUILD_DIR="${GITEA_WORKSPACE:-$PWD}/dist/linux/aria2c_build"
-          BIN_DIR="${GITEA_WORKSPACE:-$PWD}/dist/linux/bin"
+          mkdir -p "$WORKSPACE_ROOT/dist/linux/aria2c_build"
 
-          cd "$BUILD_DIR"
+          cd "$WORKSPACE_ROOT"
           wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
           tar -xzf aria2-1.37.0.tar.gz
           cd aria2-1.37.0
@@ -117,20 +115,20 @@ jobs:
           ./configure ARIA2_STATIC=yes --with-openssl
           make -j"$(nproc)"
 
-          cp src/aria2c "$BIN_DIR/aria2c"
-          chmod +x "$BIN_DIR/aria2c"
+          cp src/aria2c "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
+          chmod +x "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
 
           # Remove temp files and downloaded archives before zipping
-          rm -rf "${GITEA_WORKSPACE:-$PWD}/dist/linux/ffmpeg_temp" "${GITEA_WORKSPACE:-$PWD}/dist/linux/aria2c_build" "${GITEA_WORKSPACE:-$PWD}/dist/linux/ffmpeg.tar.xz" "${GITEA_WORKSPACE:-$PWD}/dist/linux/aria2c_build/aria2-1.37.0.tar.gz"
+          rm -rf "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" "$WORKSPACE_ROOT/dist/linux/aria2c_build" "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" "$WORKSPACE_ROOT/dist/linux/aria2c_build/aria2-1.37.0.tar.gz"
 
           # Zip everything at top level
-          cd "${GITEA_WORKSPACE:-$PWD}/dist/linux"
-          zip -r "${GITEA_WORKSPACE:-$PWD}/yt-playlist-linux-${{ gitea.ref_name }}.zip" *
-          cd "${GITEA_WORKSPACE:-$PWD}"
+          cd "$WORKSPACE_ROOT/dist/linux"
+          zip -r "$WORKSPACE_ROOT/yt-playlist-linux-${{ gitea.ref_name }}.zip" *
+          cd "$WORKSPACE_ROOT"
 
       - name: Upload Linux release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: ${GITEA_WORKSPACE:-$PWD}/yt-playlist-linux-${{ gitea.ref_name }}.zip
+          files: $WORKSPACE_ROOT/yt-playlist-linux-${{ gitea.ref_name }}.zip
           tag_name: ${{ gitea.ref_name }}
           name: ${{ gitea.ref_name }}
