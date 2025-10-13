@@ -70,19 +70,19 @@ jobs:
           cp yt-playlist-config.json dist/windows/
 
           # yt-dlp
-          curl -L -o dist/windows/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+          curl -L -o dist/windows/bin/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
 
           # FFmpeg Windows static
           curl -L -o dist/windows/ffmpeg.zip https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
           unzip -q dist/windows/ffmpeg.zip -d dist/windows/ffmpeg_temp
-          mv $(find dist/windows/ffmpeg_temp -name ffmpeg.exe | head -n 1) dist/windows/ffmpeg.exe
+          mv $(find dist/windows/ffmpeg_temp -name ffmpeg.exe | head -n 1) dist/windows/bin/ffmpeg.exe
 
           # aria2c Windows static
           curl -L -o dist/windows/aria2c.zip https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
           unzip dist/windows/aria2c.zip -d dist/windows/
-          mv dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe dist/windows/aria2c.exe
+          mv dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe dist/windows/bin/aria2c.exe
 
-          # Zip everything at top level
+          # Zip everything 
           cd dist/windows
           zip -r ../../yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip *
           cd ../..
@@ -123,15 +123,15 @@ jobs:
           cp yt-playlist-config.json dist/linux/
 
           # yt-dlp
-          curl -L -o dist/linux/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
-          chmod +x dist/linux/yt-dlp
+          curl -L -o dist/linux/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          chmod +x dist/linux/bin/yt-dlp
 
           # FFmpeg Linux static
           curl -L -o dist/linux/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
           mkdir -p dist/linux/ffmpeg_temp
           tar -xf dist/linux/ffmpeg.tar.xz -C dist/linux/ffmpeg_temp --strip-components=1
-          mv dist/linux/ffmpeg_temp/ffmpeg dist/linux/ffmpeg
-          chmod +x dist/linux/ffmpeg
+          mv dist/linux/ffmpeg_temp/ffmpeg dist/linux/bin/ffmpeg
+          chmod +x dist/linux/bin/ffmpeg
 
           # Build aria2c Linux static
           mkdir -p dist/linux/aria2c_build
@@ -142,9 +142,9 @@ jobs:
           autoreconf -i
           ./configure ARIA2_STATIC=yes --with-openssl
           make -j$(nproc)
-          cp src/aria2c ../../aria2c
+          cp src/aria2c ../../bin/aria2c
           cd ../../
-          chmod +x dist/linux/aria2c
+          chmod +x dist/linux/bin/aria2c
 
           # Zip everything at top level
           cd dist/linux

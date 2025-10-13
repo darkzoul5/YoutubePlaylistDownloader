@@ -41,9 +41,9 @@ class ConfigLoader:
                 "archive": "archive.txt"
             }
         ],
-        "yt_dlp_path": "yt-dlp.exe" if platform.system() == "Windows" else "yt-dlp",
-        "ffmpeg_path": "ffmpeg.exe" if platform.system() == "Windows" else "ffmpeg",
-        "aria2c_path": "aria2c.exe" if platform.system() == "Windows" else "aria2c",
+        "yt_dlp_path": "./bin/yt-dlp.exe" if platform.system() == "Windows" else "yt-dlp",
+        "ffmpeg_path": "./bin/ffmpeg.exe" if platform.system() == "Windows" else "ffmpeg",
+        "aria2c_path": "./bin/aria2c.exe" if platform.system() == "Windows" else "aria2c",
         "max_parallel_downloads": 10,
         "aria2c_connections": 8
     }
