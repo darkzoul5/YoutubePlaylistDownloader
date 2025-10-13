@@ -29,8 +29,7 @@ jobs:
         run: |
           REF="${GITEA_REF:-$GITHUB_REF}"
           TAG="${REF#refs/tags/}"
-          echo "TAG=$TAG"
-          echo "GITEA_REF=${GITEA_REF}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Prepare Windows package
         run: |
@@ -58,17 +57,17 @@ jobs:
           # Remove temp files before zipping
           rm -rf "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp" "$WORKSPACE_ROOT/dist/windows/aria2-1.37.0-win-64bit-build1" "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" "$WORKSPACE_ROOT/dist/windows/aria2c.zip"
 
-          # Zip everything 
           cd "$WORKSPACE_ROOT/dist/windows"
-          zip -r "$WORKSPACE_ROOT/yt-playlist-windows-${{ gitea.ref_name }}.zip" *
-          cd "$WORKSPACE_ROOT"
+          ZIP_NAME="yt-playlist-windows-${TAG}.zip"
+          zip -r "$WORKSPACE_ROOT/$ZIP_NAME" *
+          echo "ZIP_PATH=$WORKSPACE_ROOT/$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload Windows release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: $WORKSPACE_ROOT/yt-playlist-windows-$TAG.zip
-          tag_name: $TAG
-          name: $TAG
+          files: ${{ env.ZIP_PATH }}
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
 
 
 
