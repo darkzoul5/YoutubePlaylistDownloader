@@ -65,45 +65,46 @@ jobs:
 
       - name: Show workspace and files
         run: |
+          echo "GITEA_WORKSPACE_PWD=${GITEA_WORKSPACE:-$PWD}"
           echo "GITEA_WORKSPACE=${GITEA_WORKSPACE}"
           echo "PWD=$PWD"
-          echo "CI_PROJECT_DIR=${CI_PROJECT_DIR}"
           ls -l
 
       - name: Prepare Windows package
         run: |
           set -e
-          mkdir -p "${GITEA_WORKSPACE}/dist/windows"
-          cp "${GITEA_WORKSPACE}/yt-playlist-main.py" "${GITEA_WORKSPACE}/dist/windows/"
-          cp "${GITEA_WORKSPACE}/yt-playlist-config.json" "${GITEA_WORKSPACE}/dist/windows/"
+          WORKSPACE="${GITEA_WORKSPACE:-$PWD}"
+          mkdir -p "$WORKSPACE/dist/windows"
+          cp "$WORKSPACE/yt-playlist-main.py" "$WORKSPACE/dist/windows/"
+          cp "$WORKSPACE/yt-playlist-config.json" "$WORKSPACE/dist/windows/"
 
-          mkdir -p "${GITEA_WORKSPACE}/dist/windows/bin"
+          mkdir -p "$WORKSPACE/dist/windows/bin"
 
           # yt-dlp
-          curl -L -o "${GITEA_WORKSPACE}/dist/windows/bin/yt-dlp.exe" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+          curl -L -o "$WORKSPACE/dist/windows/bin/yt-dlp.exe" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
 
           # FFmpeg Windows static
-          curl -L -o "${GITEA_WORKSPACE}/dist/windows/ffmpeg.zip" https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
-          unzip -q "${GITEA_WORKSPACE}/dist/windows/ffmpeg.zip" -d "${GITEA_WORKSPACE}/dist/windows/ffmpeg_temp"
-          mv $(find "${GITEA_WORKSPACE}/dist/windows/ffmpeg_temp" -name ffmpeg.exe | head -n 1) "${GITEA_WORKSPACE}/dist/windows/bin/ffmpeg.exe"
+          curl -L -o "$WORKSPACE/dist/windows/ffmpeg.zip" https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+          unzip -q "$WORKSPACE/dist/windows/ffmpeg.zip" -d "$WORKSPACE/dist/windows/ffmpeg_temp"
+          mv $(find "$WORKSPACE/dist/windows/ffmpeg_temp" -name ffmpeg.exe | head -n 1) "$WORKSPACE/dist/windows/bin/ffmpeg.exe"
 
           # aria2c Windows static
-          curl -L -o "${GITEA_WORKSPACE}/dist/windows/aria2c.zip" https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
-          unzip "${GITEA_WORKSPACE}/dist/windows/aria2c.zip" -d "${GITEA_WORKSPACE}/dist/windows/"
-          mv "${GITEA_WORKSPACE}/dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe" "${GITEA_WORKSPACE}/dist/windows/bin/aria2c.exe"
+          curl -L -o "$WORKSPACE/dist/windows/aria2c.zip" https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
+          unzip "$WORKSPACE/dist/windows/aria2c.zip" -d "$WORKSPACE/dist/windows/"
+          mv "$WORKSPACE/dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$WORKSPACE/dist/windows/bin/aria2c.exe"
 
           # Remove temp files before zipping
-          rm -rf "${GITEA_WORKSPACE}/dist/windows/ffmpeg_temp" "${GITEA_WORKSPACE}/dist/windows/aria2-1.37.0-win-64bit-build1" "${GITEA_WORKSPACE}/dist/windows/ffmpeg.zip" "${GITEA_WORKSPACE}/dist/windows/aria2c.zip"
+          rm -rf "$WORKSPACE/dist/windows/ffmpeg_temp" "$WORKSPACE/dist/windows/aria2-1.37.0-win-64bit-build1" "$WORKSPACE/dist/windows/ffmpeg.zip" "$WORKSPACE/dist/windows/aria2c.zip"
 
           # Zip everything 
-          cd "${GITEA_WORKSPACE}/dist/windows"
-          zip -r "${GITEA_WORKSPACE}/yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip" *
-          cd "${GITEA_WORKSPACE}"
+          cd "$WORKSPACE/dist/windows"
+          zip -r "$WORKSPACE/yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip" *
+          cd "$WORKSPACE"
 
       - name: Upload Windows release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: ${GITEA_WORKSPACE}/yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip
+          files: ${GITEA_WORKSPACE:-$PWD}/yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip
           tag_name: ${{ needs.determine-next-tag.outputs.next_tag }}
           name: ${{ needs.determine-next-tag.outputs.next_tag }}
 
@@ -131,26 +132,27 @@ jobs:
       - name: Prepare Linux package
         run: |
           set -e
-          mkdir -p "${GITEA_WORKSPACE}/dist/linux"
-          cp "${GITEA_WORKSPACE}/yt-playlist-main.py" "${GITEA_WORKSPACE}/dist/linux/"
-          cp "${GITEA_WORKSPACE}/yt-playlist-config.json" "${GITEA_WORKSPACE}/dist/linux/"
+          WORKSPACE="${GITEA_WORKSPACE:-$PWD}"
+          mkdir -p "$WORKSPACE/dist/linux"
+          cp "$WORKSPACE/yt-playlist-main.py" "$WORKSPACE/dist/linux/"
+          cp "$WORKSPACE/yt-playlist-config.json" "$WORKSPACE/dist/linux/"
 
-          mkdir -p "${GITEA_WORKSPACE}/dist/linux/bin"
+          mkdir -p "$WORKSPACE/dist/linux/bin"
 
           # yt-dlp
-          curl -L -o "${GITEA_WORKSPACE}/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
-          chmod +x "${GITEA_WORKSPACE}/dist/linux/bin/yt-dlp"
+          curl -L -o "$WORKSPACE/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          chmod +x "$WORKSPACE/dist/linux/bin/yt-dlp"
 
           # FFmpeg Linux static
-          curl -L -o "${GITEA_WORKSPACE}/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-          mkdir -p "${GITEA_WORKSPACE}/dist/linux/ffmpeg_temp"
-          tar -xf "${GITEA_WORKSPACE}/dist/linux/ffmpeg.tar.xz" -C "${GITEA_WORKSPACE}/dist/linux/ffmpeg_temp" --strip-components=1
-          mv "${GITEA_WORKSPACE}/dist/linux/ffmpeg_temp/ffmpeg" "${GITEA_WORKSPACE}/dist/linux/bin/ffmpeg"
-          chmod +x "${GITEA_WORKSPACE}/dist/linux/bin/ffmpeg"
+          curl -L -o "$WORKSPACE/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+          mkdir -p "$WORKSPACE/dist/linux/ffmpeg_temp"
+          tar -xf "$WORKSPACE/dist/linux/ffmpeg.tar.xz" -C "$WORKSPACE/dist/linux/ffmpeg_temp" --strip-components=1
+          mv "$WORKSPACE/dist/linux/ffmpeg_temp/ffmpeg" "$WORKSPACE/dist/linux/bin/ffmpeg"
+          chmod +x "$WORKSPACE/dist/linux/bin/ffmpeg"
 
           # aria2c Linux static
-          mkdir -p "${GITEA_WORKSPACE}/dist/linux/aria2c_build"
-          cd "${GITEA_WORKSPACE}/dist/linux/aria2c_build"
+          mkdir -p "$WORKSPACE/dist/linux/aria2c_build"
+          cd "$WORKSPACE/dist/linux/aria2c_build"
           wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
           tar -xzf aria2-1.37.0.tar.gz
           cd aria2-1.37.0
@@ -158,20 +160,20 @@ jobs:
           ./configure ARIA2_STATIC=yes --with-openssl
           make -j$(nproc)
 
-          cp src/aria2c "${GITEA_WORKSPACE}/dist/linux/bin/aria2c"
-          chmod +x "${GITEA_WORKSPACE}/dist/linux/bin/aria2c"
+          cp src/aria2c "$WORKSPACE/dist/linux/bin/aria2c"
+          chmod +x "$WORKSPACE/dist/linux/bin/aria2c"
 
           # Remove temp files and downloaded archives before zipping
-          rm -rf "${GITEA_WORKSPACE}/dist/linux/ffmpeg_temp" "${GITEA_WORKSPACE}/dist/linux/aria2c_build" "${GITEA_WORKSPACE}/dist/linux/ffmpeg.tar.xz" "${GITEA_WORKSPACE}/dist/linux/aria2c_build/aria2-1.37.0.tar.gz"
+          rm -rf "$WORKSPACE/dist/linux/ffmpeg_temp" "$WORKSPACE/dist/linux/aria2c_build" "$WORKSPACE/dist/linux/ffmpeg.tar.xz" "$WORKSPACE/dist/linux/aria2c_build/aria2-1.37.0.tar.gz"
 
           # Zip everything at top level
-          cd "${GITEA_WORKSPACE}/dist/linux"
-          zip -r "${GITEA_WORKSPACE}/yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip" *
-          cd "${GITEA_WORKSPACE}"
+          cd "$WORKSPACE/dist/linux"
+          zip -r "$WORKSPACE/yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip" *
+          cd "$WORKSPACE"
 
       - name: Upload Linux release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: ${GITEA_WORKSPACE}/yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip
+          files: ${GITEA_WORKSPACE:-$PWD}/yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip
           tag_name: ${{ needs.determine-next-tag.outputs.next_tag }}
           name: ${{ needs.determine-next-tag.outputs.next_tag }}
