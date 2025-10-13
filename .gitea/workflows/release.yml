@@ -151,8 +151,8 @@ jobs:
           ./configure ARIA2_STATIC=yes --with-openssl
           make -j$(nproc)
 
-          cp src/aria2c dist/linux/bin/aria2c
-          chmod +x dist/linux/bin/aria2c
+          cp src/aria2c ../../../bin/aria2c
+          chmod +x ../../../bin/aria2c
 
           # Remove temp files and downloaded archives before zipping
           rm -rf dist/linux/ffmpeg_temp dist/linux/aria2c_build dist/linux/ffmpeg.tar.xz dist/linux/aria2c_build/aria2-1.37.0.tar.gz
