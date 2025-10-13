@@ -6,6 +6,8 @@ on:
       - main
     #tags:
       #- "v*"
+  release:
+    types: [published]
 
 jobs:
   determine-next-tag:
@@ -62,13 +64,6 @@ jobs:
           pip install --upgrade pip
           sudo apt update
           sudo apt install -y unzip zip curl
-
-      - name: Show workspace and files
-        run: |
-          echo "GITEA_WORKSPACE_PWD=${GITEA_WORKSPACE:-$PWD}"
-          echo "GITEA_WORKSPACE=${GITEA_WORKSPACE}"
-          echo "PWD=$PWD"
-          ls -l
 
       - name: Prepare Windows package
         run: |
