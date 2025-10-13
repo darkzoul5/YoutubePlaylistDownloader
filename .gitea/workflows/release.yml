@@ -85,19 +85,20 @@ jobs:
           unzip dist/windows/aria2c.zip -d dist/windows/
           mv dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe dist/windows/bin/aria2c.exe
 
+          # Remove temp files before zipping
+          rm -rf dist/windows/ffmpeg_temp dist/windows/aria2-1.37.0-win-64bit-build1
+
           # Zip everything 
           cd dist/windows
           zip -r ../../yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip *
           cd ../..
-
-      - name: Clean up Windows temp files
-        run: rm -rf dist/windows/ffmpeg_temp dist/windows/aria2-1.37.0-win-64bit-build1
 
       - name: Upload Windows release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
           files: yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip
           tag_name: ${{ needs.determine-next-tag.outputs.next_tag }}
+          name: ${{ needs.determine-next-tag.outputs.next_tag }}
 
   linux-package:
     runs-on: ubuntu-latest
@@ -153,16 +154,17 @@ jobs:
           cd ../../
           chmod +x dist/linux/bin/aria2c
 
+          # Remove temp files before zipping
+          rm -rf dist/linux/ffmpeg_temp dist/linux/aria2c_build
+
           # Zip everything at top level
           cd dist/linux
           zip -r ../../yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip *
           cd ../..
-
-      - name: Clean up Linux temp files
-        run: rm -rf dist/linux/ffmpeg_temp dist/linux/aria2c_build
 
       - name: Upload Linux release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
           files: yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip
           tag_name: ${{ needs.determine-next-tag.outputs.next_tag }}
+          name: ${{ needs.determine-next-tag.outputs.next_tag }}
