@@ -97,6 +97,12 @@ jobs:
             autoconf automake libtool gettext autopoint \
             libssl-dev libxml2-dev zlib1g-dev libsqlite3-dev
 
+      - name: Extract tag name
+        run: |
+          REF="${GITEA_REF:-$GITHUB_REF}"
+          TAG="${REF#refs/tags/}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
       - name: Prepare Linux package
         run: |
           set -e
@@ -135,14 +141,15 @@ jobs:
           # Remove temp files and downloaded archives before zipping
           rm -rf "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" "$WORKSPACE_ROOT/dist/linux/aria2c_build" "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" "$WORKSPACE_ROOT/dist/linux/aria2c_build/aria2-1.37.0.tar.gz"
 
-          # Zip everything at top level
+          # Zip everything
           cd "$WORKSPACE_ROOT/dist/linux"
-          zip -r "$WORKSPACE_ROOT/yt-playlist-linux-${{ gitea.ref_name }}.zip" *
-          cd "$WORKSPACE_ROOT"
+          ZIP_NAME="yt-playlist-linux-${TAG}.zip"
+          zip -r "$WORKSPACE_ROOT/$ZIP_NAME" *
+          echo "ZIP_PATH=$WORKSPACE_ROOT/$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload Linux release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: $WORKSPACE_ROOT/yt-playlist-linux-${{ gitea.ref_name }}.zip
-          tag_name: ${{ gitea.ref_name }}
-          name: ${{ gitea.ref_name }}
+          files: ${{ env.ZIP_PATH }}
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
