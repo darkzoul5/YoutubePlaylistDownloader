@@ -59,7 +59,7 @@ jobs:
       - name: Upload Windows release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: ${GITEA_WORKSPACE:-$PWD}/yt-playlist-windows-${{ gitea.ref_name }}.zip
+          files: yt-playlist-windows-${{ gitea.ref_name }}.zip
           tag_name: ${{ gitea.ref_name }}
           name: ${{ gitea.ref_name }}
 
@@ -106,16 +106,19 @@ jobs:
 
           # aria2c Linux static
           mkdir -p "${GITEA_WORKSPACE:-$PWD}/dist/linux/aria2c_build"
-          cd "${GITEA_WORKSPACE:-$PWD}/dist/linux/aria2c_build"
+          BUILD_DIR="${GITEA_WORKSPACE:-$PWD}/dist/linux/aria2c_build"
+          BIN_DIR="${GITEA_WORKSPACE:-$PWD}/dist/linux/bin"
+
+          cd "$BUILD_DIR"
           wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
           tar -xzf aria2-1.37.0.tar.gz
           cd aria2-1.37.0
           autoreconf -i
           ./configure ARIA2_STATIC=yes --with-openssl
-          make -j$(nproc)
+          make -j"$(nproc)"
 
-          cp src/aria2c "${GITEA_WORKSPACE:-$PWD}/dist/linux/bin/aria2c"
-          chmod +x "${GITEA_WORKSPACE:-$PWD}/dist/linux/bin/aria2c"
+          cp src/aria2c "$BIN_DIR/aria2c"
+          chmod +x "$BIN_DIR/aria2c"
 
           # Remove temp files and downloaded archives before zipping
           rm -rf "${GITEA_WORKSPACE:-$PWD}/dist/linux/ffmpeg_temp" "${GITEA_WORKSPACE:-$PWD}/dist/linux/aria2c_build" "${GITEA_WORKSPACE:-$PWD}/dist/linux/ffmpeg.tar.xz" "${GITEA_WORKSPACE:-$PWD}/dist/linux/aria2c_build/aria2-1.37.0.tar.gz"
