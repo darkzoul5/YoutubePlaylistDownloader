@@ -150,7 +150,7 @@ jobs:
           autoreconf -i
           ./configure ARIA2_STATIC=yes --with-openssl
           make -j$(nproc)
-          cp src/aria2c ../../bin/aria2c
+          cp src/aria2c ../../../bin/aria2c
           cd ../../
           chmod +x dist/linux/bin/aria2c
 
