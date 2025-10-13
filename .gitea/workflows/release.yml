@@ -63,6 +63,13 @@ jobs:
           sudo apt update
           sudo apt install -y unzip zip curl
 
+      - name: Show workspace and files
+        run: |
+          echo "GITEA_WORKSPACE=${GITEA_WORKSPACE}"
+          echo "PWD=$PWD"
+          echo "CI_PROJECT_DIR=${CI_PROJECT_DIR}"
+          ls -l
+
       - name: Prepare Windows package
         run: |
           set -e
