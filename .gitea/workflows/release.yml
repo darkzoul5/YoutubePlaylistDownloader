@@ -69,6 +69,8 @@ jobs:
           cp yt-playlist-main.py dist/windows/
           cp yt-playlist-config.json dist/windows/
 
+          mkdir -p dist/windows/bin
+
           # yt-dlp
           curl -L -o dist/windows/bin/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
 
@@ -123,6 +125,8 @@ jobs:
           cp yt-playlist-main.py dist/linux/
           cp yt-playlist-config.json dist/linux/
 
+          mkdir -p dist/linux/bin
+          
           # yt-dlp
           curl -L -o dist/linux/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
           chmod +x dist/linux/bin/yt-dlp
