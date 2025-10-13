@@ -25,6 +25,13 @@ jobs:
           sudo apt update
           sudo apt install -y unzip zip curl
 
+      - name: Extract tag name
+        run: |
+          REF="${GITEA_REF:-$GITHUB_REF}"
+          TAG="${REF#refs/tags/}"
+          echo "TAG=$TAG"
+          echo "GITEA_REF=${GITEA_REF}"
+
       - name: Prepare Windows package
         run: |
           set -e
@@ -59,9 +66,17 @@ jobs:
       - name: Upload Windows release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: $WORKSPACE_ROOT/yt-playlist-windows-${{ gitea.ref_name }}.zip
-          tag_name: ${{ gitea.ref_name }}
-          name: ${{ gitea.ref_name }}
+          files: $WORKSPACE_ROOT/yt-playlist-windows-$TAG.zip
+          tag_name: $TAG
+          name: $TAG
+
+
+
+
+
+
+
+
 
   linux-package:
     runs-on: ubuntu-latest
