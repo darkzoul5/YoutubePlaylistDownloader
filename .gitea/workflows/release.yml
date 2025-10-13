@@ -132,7 +132,8 @@ jobs:
           autoreconf -i
           ./configure ARIA2_STATIC=yes --with-openssl
           make -j$(nproc)
-          cp src/aria2c ../../../bin/aria2c
+          mkdir -p dist/linux/bin
+          cp src/aria2c dist/linux/bin/aria2c
 
       - name: Prepare Linux package
         run: |
@@ -141,7 +142,7 @@ jobs:
           cp yt-playlist-main.py dist/linux/
           cp yt-playlist-config.json dist/linux/
 
-          mkdir -p dist/linux/bin
+          
 
           # yt-dlp
           curl -L -o dist/linux/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
