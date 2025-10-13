@@ -1,13 +1,11 @@
 name: Build Release Packages
 
 on:
-  #push:
+  push:
     #branches:
       #- main
-    #tags:
-      #- "v*"
-  release:
-    types: [published]
+    tags:
+      - "v*.*.*"
 
 jobs:
   windows-package:
@@ -30,6 +28,7 @@ jobs:
       - name: Prepare Windows package
         run: |
           set -e
+          WORKSPACE="${GITEA_WORKSPACE:-$PWD}"
           mkdir -p "${GITEA_WORKSPACE:-$PWD}/dist/windows"
           cp "${GITEA_WORKSPACE:-$PWD}/yt-playlist-main.py" "${GITEA_WORKSPACE:-$PWD}/dist/windows/"
           cp "${GITEA_WORKSPACE:-$PWD}/yt-playlist-config.json" "${GITEA_WORKSPACE:-$PWD}/dist/windows/"
@@ -54,15 +53,15 @@ jobs:
 
           # Zip everything 
           cd "${GITEA_WORKSPACE:-$PWD}/dist/windows"
-          zip -r "${GITEA_WORKSPACE:-$PWD}/yt-playlist-windows-${GITEA_REF_NAME}.zip" *
+          zip -r "${GITEA_WORKSPACE:-$PWD}/yt-playlist-windows-${{ gitea.ref_name }}.zip" *
           cd "${GITEA_WORKSPACE:-$PWD}"
 
       - name: Upload Windows release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: ${GITEA_WORKSPACE:-$PWD}/yt-playlist-windows-${GITEA_REF_NAME}.zip
-          tag_name: ${GITEA_REF_NAME}
-          name: ${GITEA_REF_NAME}
+          files: ${GITEA_WORKSPACE:-$PWD}/yt-playlist-windows-${{ gitea.ref_name }}.zip
+          tag_name: ${{ gitea.ref_name }}
+          name: ${{ gitea.ref_name }}
 
   linux-package:
     runs-on: ubuntu-latest
@@ -87,6 +86,7 @@ jobs:
       - name: Prepare Linux package
         run: |
           set -e
+          WORKSPACE="${GITEA_WORKSPACE:-$PWD}"
           mkdir -p "${GITEA_WORKSPACE:-$PWD}/dist/linux"
           cp "${GITEA_WORKSPACE:-$PWD}/yt-playlist-main.py" "${GITEA_WORKSPACE:-$PWD}/dist/linux/"
           cp "${GITEA_WORKSPACE:-$PWD}/yt-playlist-config.json" "${GITEA_WORKSPACE:-$PWD}/dist/linux/"
@@ -122,12 +122,12 @@ jobs:
 
           # Zip everything at top level
           cd "${GITEA_WORKSPACE:-$PWD}/dist/linux"
-          zip -r "${GITEA_WORKSPACE:-$PWD}/yt-playlist-linux-${GITEA_REF_NAME}.zip" *
+          zip -r "${GITEA_WORKSPACE:-$PWD}/yt-playlist-linux-${{ gitea.ref_name }}.zip" *
           cd "${GITEA_WORKSPACE:-$PWD}"
 
       - name: Upload Linux release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: ${GITEA_WORKSPACE:-$PWD}/yt-playlist-linux-${GITEA_REF_NAME}.zip
-          tag_name: ${GITEA_REF_NAME}
-          name: ${GITEA_REF_NAME}
+          files: ${GITEA_WORKSPACE:-$PWD}/yt-playlist-linux-${{ gitea.ref_name }}.zip
+          tag_name: ${{ gitea.ref_name }}
+          name: ${{ gitea.ref_name }}
