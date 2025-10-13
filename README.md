@@ -27,7 +27,7 @@ A cross-platform tool and workflow for downloading entire YouTube playlists as M
 ### Quick Start
 
 1. **Download the latest release:**
-   - Go to the [Releases](https://your.gitea.instance/youruser/YouTube-Playlist-Downloader/releases) page.
+   - Go to the [Releases](https://git.darkzoul.org/dark_zoul/YouTube-Playlist-Downloader/releases) page.
    - Download the appropriate archive for your platform (Windows or Linux).
 
 2. **Unzip the archive:**
