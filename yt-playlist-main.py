@@ -201,7 +201,6 @@ class PlaylistDownloader:
         safe_title = self.sanitize_title(title, video["id"])
         video_url = f"https://www.youtube.com/watch?v={video['id']}"
 
-        # --- video quality mapping helper ---
         def build_video_format(max_quality):
             mapping = {
                 "720p": "bestvideo[height<=720]+bestaudio/best[height<=720]",
@@ -212,10 +211,11 @@ class PlaylistDownloader:
             }
             return mapping.get(max_quality.lower(), mapping["1080p"])
 
-        # --- decide command based on download mode ---
         cmds = []
+
         if self.download_mode == "audio":
-            output_path = self.get_file_path(track_index, safe_title)
+            output_path = self.save_path / "audio" / f"{track_index:03d} - {safe_title}.mp3"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
             args = [
                 str(self.yt_dlp),
                 "-f", "bestaudio",
@@ -233,8 +233,9 @@ class PlaylistDownloader:
             cmds.append((args, f"{track_index:03d} - {title} (audio)"))
 
         elif self.download_mode == "video":
+            output_path = self.save_path / "video" / f"{track_index:03d} - {safe_title}.mp4"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
             fmt = build_video_format(self.max_video_quality)
-            output_path = self.save_path / f"{track_index:03d} - {safe_title}.mp4"
             args = [
                 str(self.yt_dlp),
                 "-f", fmt,
@@ -250,8 +251,10 @@ class PlaylistDownloader:
             cmds.append((args, f"{track_index:03d} - {title} (video)"))
 
         elif self.download_mode == "both":
-            # audio
-            audio_output = self.get_file_path(track_index, safe_title)
+            # audio folder
+            audio_folder = self.save_path / "audio"
+            audio_folder.mkdir(parents=True, exist_ok=True)
+            audio_output = audio_folder / f"{track_index:03d} - {safe_title}.mp3"
             audio_args = [
                 str(self.yt_dlp),
                 "-f", "bestaudio",
@@ -268,9 +271,11 @@ class PlaylistDownloader:
             ]
             cmds.append((audio_args, f"{track_index:03d} - {title} (audio)"))
 
-            # video
+            # video folder
+            video_folder = self.save_path / "video"
+            video_folder.mkdir(parents=True, exist_ok=True)
+            video_output = video_folder / f"{track_index:03d} - {safe_title}.mp4"
             fmt = build_video_format(self.max_video_quality)
-            video_output = self.save_path / f"{track_index:03d} - {safe_title}.mp4"
             video_args = [
                 str(self.yt_dlp),
                 "-f", fmt,
@@ -301,6 +306,7 @@ class PlaylistDownloader:
                 success = False
 
         return success
+
 
     def renumber_all_tracks(self, playlist_entries):
         print(f"\n{STEP} Renumbering files according to playlist order")
