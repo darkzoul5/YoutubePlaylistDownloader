@@ -70,15 +70,15 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
   "playlists": [
     {
       "url": "https://www.youtube.com/playlist?list=playlistidhere",
+      "download_mode": "audio",         
+      "max_video_quality": "1080p"
       "save_path": "./music",
-      "archive": "archive.txt"
+      "archive": "archive.txt",
     }
   ],
   "yt_dlp_path": "./bin/yt-dlp.exe",      // or "yt-dlp" for Linux
   "ffmpeg_path": "./bin/ffmpeg.exe",      // or "ffmpeg" for Linux
   "aria2c_path": "./bin/aria2c.exe",      // or "aria2c" for Linux
-  "download_mode": "audio",               // "audio", "video", or "both"
-  "max_video_quality": "1080p",           // "720p", "1080p", "1440p", "2160p", "best"
   "max_parallel_downloads": 10,
   "aria2c_connections": 8
 }
@@ -93,16 +93,19 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
 
 ### Running
 
-```sh
-python yt-playlist-main.py
-```
+### Running
 
-- The script checks for required binaries and updates yt-dlp.
-- Downloads new tracks in the playlist according to your chosen mode and quality.
-- Tracks are saved and automatically renumbered to match playlist order.
-- Deleted/private videos are skipped.
-- Archive file prevents re-downloading existing tracks.
-- After download, you can optionally clean up files not present in the playlist anymore (confirmation required).
+- Just run the script with Python:
+  - On Windows: `python yt-playlist-main.py`
+  - On Linux: `python3 yt-playlist-main.py`
+
+- The downloader will:
+  - Check for required tools and update yt-dlp automatically
+  - Download new tracks or videos from your playlist(s)
+  - Number and name files to match the playlist order
+  - Skip deleted or private videos
+  - Avoid re-downloading files you've already downloaded
+  - Offer to clean up files that are no longer in the playlist
 
 ---
 
