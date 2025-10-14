@@ -2,9 +2,9 @@
   "playlists": [
     {
       "url": "https://www.youtube.com/playlist?list=PLUmRr21IDW9Ui2Sl9MFsEB7A6u1fNbIDu",
-      "download_mode": "video",
+      "download_mode": "both",
       "max_video_quality": "720p",
-      "save_path": "C:/Users/DARK_ZOUL/Desktop/downloads/video",
+      "save_path": "C:/Users/DARK_ZOUL/Desktop/downloads/test",
       "archive": "archive.txt"
     }
   ],
