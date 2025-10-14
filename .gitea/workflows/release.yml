@@ -2,52 +2,14 @@ name: Build Release Packages
 
 on:
   push:
-    branches:
-      - main
-    #tags:
-      #- "v*"
+    #branches:
+      #- main
+    tags:
+      - "v*.*.*"
 
 jobs:
-  determine-next-tag:
-    runs-on: ubuntu-latest
-    outputs:
-      next_tag: ${{ steps.set_tag.outputs.next_tag }}
-    steps:
-      - name: Checkout code
-        uses: https://gitea.com/actions/checkout@v5
-
-      - name: Determine next version tag
-        id: set_tag
-        run: |
-          git fetch --tags
-
-          LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n1)
-          echo "Latest tag: $LATEST_TAG"
-
-          if [ -z "$LATEST_TAG" ]; then
-            NEXT_TAG="v0.0.1"
-          else
-            PATCH=$(echo $LATEST_TAG | awk -F. '{print $3}')
-            MAJOR=$(echo $LATEST_TAG | awk -F. '{print $1}' | tr -d 'v')
-            MINOR=$(echo $LATEST_TAG | awk -F. '{print $2}')
-            PATCH=$((PATCH+1))
-            NEXT_TAG="v${MAJOR}.${MINOR}.${PATCH}"
-          fi
-
-          echo "Next tag: $NEXT_TAG"
-          echo "next_tag=$NEXT_TAG" >> $GITHUB_OUTPUT
-
-      - name: Create new tag
-        run: |
-          git config user.name "Gitea Actions"
-          git config user.email "actions@gitea.local"
-          git tag ${{ steps.set_tag.outputs.next_tag }}
-          git push origin ${{ steps.set_tag.outputs.next_tag }}
-
-
   windows-package:
     runs-on: ubuntu-latest
-    needs: determine-next-tag
     steps:
       - name: Checkout code
         uses: https://gitea.com/actions/checkout@v5
@@ -63,46 +25,60 @@ jobs:
           sudo apt update
           sudo apt install -y unzip zip curl
 
+      - name: Extract tag name
+        run: |
+          REF="${GITEA_REF:-$GITHUB_REF}"
+          TAG="${REF#refs/tags/}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
       - name: Prepare Windows package
         run: |
           set -e
-          mkdir -p dist/windows
-          cp yt-playlist-main.py dist/windows/
-          cp yt-playlist-config.json dist/windows/
+          WORKSPACE_ROOT="${GITEA_WORKSPACE:-$PWD}"
+          mkdir -p "$WORKSPACE_ROOT/dist/windows"
+          cp "$WORKSPACE_ROOT/yt-playlist-main.py" "$WORKSPACE_ROOT/dist/windows/"
+          cp "$WORKSPACE_ROOT/yt-playlist-config.json" "$WORKSPACE_ROOT/dist/windows/"
 
-          mkdir -p dist/windows/bin
+          mkdir -p "$WORKSPACE_ROOT/dist/windows/bin"
 
           # yt-dlp
-          curl -L -o dist/windows/bin/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+          curl -L -o "$WORKSPACE_ROOT/dist/windows/bin/yt-dlp.exe" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
 
           # FFmpeg Windows static
-          curl -L -o dist/windows/ffmpeg.zip https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
-          unzip -q dist/windows/ffmpeg.zip -d dist/windows/ffmpeg_temp
-          mv $(find dist/windows/ffmpeg_temp -name ffmpeg.exe | head -n 1) dist/windows/bin/ffmpeg.exe
+          curl -L -o "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+          unzip -q "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" -d "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp"
+          mv $(find "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp" -name ffmpeg.exe | head -n 1) "$WORKSPACE_ROOT/dist/windows/bin/ffmpeg.exe"
 
           # aria2c Windows static
-          curl -L -o dist/windows/aria2c.zip https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
-          unzip dist/windows/aria2c.zip -d dist/windows/
-          mv dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe dist/windows/bin/aria2c.exe
+          curl -L -o "$WORKSPACE_ROOT/dist/windows/aria2c.zip" https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
+          unzip "$WORKSPACE_ROOT/dist/windows/aria2c.zip" -d "$WORKSPACE_ROOT/dist/windows/"
+          mv "$WORKSPACE_ROOT/dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$WORKSPACE_ROOT/dist/windows/bin/aria2c.exe"
 
           # Remove temp files before zipping
-          rm -rf dist/windows/ffmpeg_temp dist/windows/aria2-1.37.0-win-64bit-build1 dist/windows/ffmpeg.zip dist/windows/aria2c.zip dist/windows/aria2c.zip
+          rm -rf "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp" "$WORKSPACE_ROOT/dist/windows/aria2-1.37.0-win-64bit-build1" "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" "$WORKSPACE_ROOT/dist/windows/aria2c.zip"
 
-          # Zip everything 
-          cd dist/windows
-          zip -r ../../yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip *
-          cd ../..
+          cd "$WORKSPACE_ROOT/dist/windows"
+          ZIP_NAME="yt-playlist-windows-${TAG}.zip"
+          zip -r "$WORKSPACE_ROOT/$ZIP_NAME" *
+          echo "ZIP_PATH=$WORKSPACE_ROOT/$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload Windows release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: yt-playlist-windows-${{ needs.determine-next-tag.outputs.next_tag }}.zip
-          tag_name: ${{ needs.determine-next-tag.outputs.next_tag }}
-          name: ${{ needs.determine-next-tag.outputs.next_tag }}
+          files: ${{ env.ZIP_PATH }}
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
+
+
+
+
+
+
+
+
 
   linux-package:
     runs-on: ubuntu-latest
-    needs: determine-next-tag
     steps:
       - name: Checkout code
         uses: https://gitea.com/actions/checkout@v5
@@ -116,10 +92,15 @@ jobs:
         run: |
           pip install --upgrade pip
           sudo apt update
-          sudo apt install -y \
-            unzip zip curl wget build-essential pkg-config \
-            autoconf automake libtool gettext autopoint \
-            libssl-dev libxml2-dev zlib1g-dev libsqlite3-dev
+          sudo apt install -y unzip zip curl wget build-essential \
+          pkg-config libssl-dev zlib1g-dev
+
+
+      - name: Extract tag name
+        run: |
+          REF="${GITEA_REF:-$GITHUB_REF}"
+          TAG="${REF#refs/tags/}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Build aria2c Linux static
         run: |
@@ -139,39 +120,55 @@ jobs:
       - name: Prepare Linux package
         run: |
           set -e
-          mkdir -p dist/linux
-          cp yt-playlist-main.py dist/linux/
-          cp yt-playlist-config.json dist/linux/
+          WORKSPACE_ROOT="${GITEA_WORKSPACE:-$PWD}"
+          mkdir -p "$WORKSPACE_ROOT/dist/linux"
+          cp "$WORKSPACE_ROOT/yt-playlist-main.py" "$WORKSPACE_ROOT/dist/linux/"
+          cp "$WORKSPACE_ROOT/yt-playlist-config.json" "$WORKSPACE_ROOT/dist/linux/"
 
-          mkdir -p dist/linux/bin
+          mkdir -p "$WORKSPACE_ROOT/dist/linux/bin"
 
           # yt-dlp
-          curl -L -o dist/linux/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
-          chmod +x dist/linux/bin/yt-dlp
+          curl -L -o "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          chmod +x "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp"
 
           # FFmpeg Linux static
-          curl -L -o dist/linux/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-          mkdir -p dist/linux/ffmpeg_temp
-          tar -xf dist/linux/ffmpeg.tar.xz -C dist/linux/ffmpeg_temp --strip-components=1
-          mv dist/linux/ffmpeg_temp/ffmpeg dist/linux/bin/ffmpeg
-          chmod +x dist/linux/bin/ffmpeg
+          curl -L -o "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+          mkdir -p "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp"
+          tar -xf "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" -C "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" --strip-components=1
+          mv "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp/ffmpeg" "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
+          chmod +x "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
 
-          # Copy built aria2c binary if present
-          if [ -f dist/linux/bin/aria2c ]; then
-            chmod +x dist/linux/bin/aria2c
-          fi
+          # aria2c minimal fully static
+          mkdir -p "$WORKSPACE_ROOT/dist/linux/aria2c_build"
+          cd "$WORKSPACE_ROOT"
+          wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
+          tar -xzf aria2-1.37.0.tar.gz
+          cd aria2-1.37.0
+          CFLAGS="-Os -s" LDFLAGS="-static" ./configure \
+            --enable-static --disable-shared \
+            --disable-libaria2 --without-ca-bundle \
+            --without-libnettle --without-libgcrypt \
+            --without-libssh2 --without-libexpat \
+            --without-libxml2 --without-libsqlite3 \
+            --with-openssl
+          make -j"$(nproc)"
+          strip src/aria2c
+          
+          cp src/aria2c "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
+          chmod +x "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
 
-          # Remove temp files and downloaded archives before zipping
-          rm -rf dist/linux/ffmpeg_temp dist/linux/aria2c_build dist/linux/ffmpeg.tar.xz dist/linux/aria2c_build/aria2-1.37.0.tar.gz
+          # Cleanup
+          rm -rf "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" "$WORKSPACE_ROOT/dist/linux/aria2c_build" "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" "$WORKSPACE_ROOT/aria2-1.37.0" "$WORKSPACE_ROOT/aria2-1.37.0.tar.gz"
 
-          # Zip everything at top level
-          cd dist/linux
-          zip -r ../../yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip *
-          cd ../..
+          # Zip everything
+          cd "$WORKSPACE_ROOT/dist/linux"
+          ZIP_NAME="yt-playlist-linux-${TAG}.zip"
+          zip -r "$WORKSPACE_ROOT/$ZIP_NAME" *
+          echo "ZIP_PATH=$WORKSPACE_ROOT/$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload Linux release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: yt-playlist-linux-${{ needs.determine-next-tag.outputs.next_tag }}.zip
-          tag_name: ${{ needs.determine-next-tag.outputs.next_tag }}
-          name: ${{ needs.determine-next-tag.outputs.next_tag }}
+          files: ${{ env.ZIP_PATH }}
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
