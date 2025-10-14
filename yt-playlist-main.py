@@ -37,7 +37,7 @@ class ConfigLoader:
     DEFAULT_CONFIG = {
         "playlists": [
             {
-                "url": "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_HERE",
+                "url": "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID_HERE",
                 "download_mode": "audio",  # options: audio, video, both
                 "max_video_quality": "1080p", # options: 720p, 1080p, 1440p, 2160p, best
                 "save_path": "./downloads",
@@ -369,37 +369,44 @@ class PlaylistDownloader:
             safe_title = self.sanitize_title(title, video["id"])
             valid_titles.add(safe_title)
 
-        to_delete = []
-        for file in self.save_path.glob("*.mp3"):
-            parts = file.name.split(" - ", 1)
-            if len(parts) == 2:
-                safe_title_in_file = parts[1][:-4]
-                if safe_title_in_file not in valid_titles:
-                    to_delete.append(file)
+        def clean_folder(folder, ext):
+            to_delete = []
+            folder.mkdir(parents=True, exist_ok=True)
+            for file in folder.glob(f"*{ext}"):
+                parts = file.name.split(" - ", 1)
+                if len(parts) == 2:
+                    safe_title_in_file = parts[1][:-len(ext)]
+                    if safe_title_in_file not in valid_titles:
+                        to_delete.append(file)
 
-        if not to_delete:
-            print(f"{OK} No extra files to delete.")
-            return
+            if not to_delete:
+                return
 
-        print(f"{WARN} The following files are not in the playlist and will be deleted:")
-        for f in to_delete:
-            print(f"  {f.name}")
-
-        try:
-            confirm = input(f"{WARN} Delete these files? [y/N]: ").strip().lower()
-        except EOFError:
-            confirm = "n"
-
-        if confirm == "y":
+            print(f"{WARN} The following files in '{folder}' are not in the playlist and will be deleted:")
             for f in to_delete:
-                try:
-                    f.unlink()
-                    print(f"{OK} Deleted: {f.name}")
-                except Exception as ex:
-                    print(f"{FAIL} Failed to delete {f.name}: {ex}")
-            print(f"{OK} Cleanup complete.")
-        else:
-            print(f"{OK} Cleanup aborted. No files were deleted.")
+                print(f"  {f.name}")
+
+            try:
+                confirm = input(f"{WARN} Delete these files? [y/N]: ").strip().lower()
+            except EOFError:
+                confirm = "n"
+
+            if confirm == "y":
+                for f in to_delete:
+                    try:
+                        f.unlink()
+                        print(f"{OK} Deleted: {f.name}")
+                    except Exception as ex:
+                        print(f"{FAIL} Failed to delete {f.name}: {ex}")
+                print(f"{OK} Cleanup complete in '{folder}'.")
+            else:
+                print(f"{OK} Cleanup aborted in '{folder}'. No files were deleted.")
+
+        if self.download_mode in ("audio", "both"):
+            clean_folder(self.save_path / "audio", ".mp3")
+        if self.download_mode in ("video", "both"):
+            clean_folder(self.save_path / "video", ".mp4")
+
 
 
 class PlaylistManager:
