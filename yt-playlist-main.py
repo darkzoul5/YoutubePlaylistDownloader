@@ -37,13 +37,13 @@ class ConfigLoader:
         "playlists": [
             {
                 "url": "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_HERE",
-                "save_path": "./music",
+                "save_path": "./downloads",
                 "archive": "archive.txt"
             }
         ],
-        "yt_dlp_path": "./bin/yt-dlp.exe" if platform.system() == "Windows" else "yt-dlp",
-        "ffmpeg_path": "./bin/ffmpeg.exe" if platform.system() == "Windows" else "ffmpeg",
-        "aria2c_path": "./bin/aria2c.exe" if platform.system() == "Windows" else "aria2c",
+        "yt_dlp_path": "./bin/yt-dlp.exe" if platform.system() == "Windows" else "./bin/yt-dlp",
+        "ffmpeg_path": "./bin/ffmpeg.exe" if platform.system() == "Windows" else "./bin/ffmpeg",
+        "aria2c_path": "./bin/aria2c.exe" if platform.system() == "Windows" else "./bin/aria2c",
         "download_mode": "audio",  # options: audio, video, both
         "max_video_quality": "1080p", # options: 720p, 1080p, 1440p, 2160p, best
         "max_parallel_downloads": 10,
