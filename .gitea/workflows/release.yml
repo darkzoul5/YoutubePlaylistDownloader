@@ -92,7 +92,7 @@ jobs:
           pip install --upgrade pip
           sudo apt update
           sudo apt install -y zip curl wget build-essential \
-            pkg-config libssl-dev zlib1g-dev autoconf automake libtool
+            pkg-config libssl-dev zlib1g-dev autopoint libtool
 
 
       - name: Extract tag name
