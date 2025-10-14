@@ -132,6 +132,7 @@ jobs:
           autoreconf -i
           ./configure ARIA2_STATIC=yes --with-openssl
           make -j$(nproc)
+          cd $CI_PROJECT_DIR
           mkdir -p dist/linux/bin
           cp src/aria2c dist/linux/bin/aria2c
 

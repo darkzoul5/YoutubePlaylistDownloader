@@ -44,6 +44,8 @@ class ConfigLoader:
         "yt_dlp_path": "./bin/yt-dlp.exe" if platform.system() == "Windows" else "yt-dlp",
         "ffmpeg_path": "./bin/ffmpeg.exe" if platform.system() == "Windows" else "ffmpeg",
         "aria2c_path": "./bin/aria2c.exe" if platform.system() == "Windows" else "aria2c",
+        "download_mode": "audio",  # options: audio, video, both
+        "max_video_quality": "1080p", # options: 720p, 1080p, 1440p, 2160p, best
         "max_parallel_downloads": 10,
         "aria2c_connections": 8
     }
@@ -103,6 +105,14 @@ class ConfigLoader:
         return self.data["aria2c_path"]
 
     @property
+    def download_mode(self):
+        return self.data.get("download_mode", "audio")
+    
+    @property
+    def max_video_quality(self):
+        return self.data.get("max_video_quality", "1080p")
+
+    @property
     def max_parallel_downloads(self):
         return self.data.get("max_parallel_downloads", 10)
 
@@ -140,6 +150,8 @@ class PlaylistDownloader:
         self.yt_dlp = config.yt_dlp_path
         self.ffmpeg = config.ffmpeg_path
         self.aria2c = config.aria2c_path
+        self.download_mode = config.download_mode
+        self.max_video_quality = config.max_video_quality
         self.max_parallel = config.max_parallel_downloads
         self.aria2c_connections = config.aria2c_connections
 
@@ -185,11 +197,24 @@ class PlaylistDownloader:
     def download_video(self, video, track_index):
         title = video.get("title", "[Unknown]")
         safe_title = self.sanitize_title(title, video["id"])
-        file_output = self.get_file_path(track_index, safe_title)
         video_url = f"https://www.youtube.com/watch?v={video['id']}"
 
-        try:
-            subprocess.run([
+        # --- video quality mapping helper ---
+        def build_video_format(max_quality):
+            mapping = {
+                "720p": "bestvideo[height<=720]+bestaudio/best[height<=720]",
+                "1080p": "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
+                "1440p": "bestvideo[height<=1440]+bestaudio/best[height<=1440]",
+                "2160p": "bestvideo[height<=2160]+bestaudio/best[height<=2160]",
+                "best": "bestvideo+bestaudio/best"
+            }
+            return mapping.get(max_quality.lower(), mapping["1080p"])
+
+        # --- decide command based on download mode ---
+        cmds = []
+        if self.download_mode == "audio":
+            output_path = self.get_file_path(track_index, safe_title)
+            args = [
                 str(self.yt_dlp),
                 "-f", "bestaudio",
                 "--extract-audio",
@@ -197,18 +222,83 @@ class PlaylistDownloader:
                 "--audio-quality", "0",
                 "--ffmpeg-location", str(self.ffmpeg),
                 "--download-archive", str(self.archive),
-                "-o", str(file_output),
+                "-o", str(output_path),
                 "--external-downloader", str(self.aria2c),
-                "--external-downloader-args", f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
+                "--external-downloader-args",
+                f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
                 video_url
-            ], check=True)
-            print(f"{OK} Downloaded: {track_index:03d} - {title}")
-            return True
-        except subprocess.CalledProcessError as e:
-            #print(f"{FAIL} Error downloading {title}: {e}") #print full error
-            err_msg = e.stderr.strip().splitlines()[-1] if e.stderr else "Video Unlisted or Unavailable"
-            print(f"{FAIL} Download failed: {title} — {err_msg}")
+            ]
+            cmds.append((args, f"{track_index:03d} - {title} (audio)"))
+
+        elif self.download_mode == "video":
+            fmt = build_video_format(self.max_video_quality)
+            output_path = self.save_path / f"{track_index:03d} - {safe_title}.mp4"
+            args = [
+                str(self.yt_dlp),
+                "-f", fmt,
+                "--merge-output-format", "mp4",
+                "--ffmpeg-location", str(self.ffmpeg),
+                "--download-archive", str(self.archive),
+                "-o", str(output_path),
+                "--external-downloader", str(self.aria2c),
+                "--external-downloader-args",
+                f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
+                video_url
+            ]
+            cmds.append((args, f"{track_index:03d} - {title} (video)"))
+
+        elif self.download_mode == "both":
+            # audio
+            audio_output = self.get_file_path(track_index, safe_title)
+            audio_args = [
+                str(self.yt_dlp),
+                "-f", "bestaudio",
+                "--extract-audio",
+                "--audio-format", "mp3",
+                "--audio-quality", "0",
+                "--ffmpeg-location", str(self.ffmpeg),
+                "--download-archive", str(self.archive),
+                "-o", str(audio_output),
+                "--external-downloader", str(self.aria2c),
+                "--external-downloader-args",
+                f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
+                video_url
+            ]
+            cmds.append((audio_args, f"{track_index:03d} - {title} (audio)"))
+
+            # video
+            fmt = build_video_format(self.max_video_quality)
+            video_output = self.save_path / f"{track_index:03d} - {safe_title}.mp4"
+            video_args = [
+                str(self.yt_dlp),
+                "-f", fmt,
+                "--merge-output-format", "mp4",
+                "--ffmpeg-location", str(self.ffmpeg),
+                "--download-archive", str(self.archive),
+                "-o", str(video_output),
+                "--external-downloader", str(self.aria2c),
+                "--external-downloader-args",
+                f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
+                video_url
+            ]
+            cmds.append((video_args, f"{track_index:03d} - {title} (video)"))
+
+        else:
+            print(f"{FAIL} Invalid download_mode '{self.download_mode}', skipping")
             return False
+
+        # --- execute one or both downloads ---
+        success = True
+        for args, label in cmds:
+            try:
+                subprocess.run(args, check=True)
+                print(f"{OK} Downloaded: {label}")
+            except subprocess.CalledProcessError as e:
+                err_msg = e.stderr.strip().splitlines()[-1] if e.stderr else "Unknown error"
+                print(f"{FAIL} Download failed: {label} — {err_msg}")
+                success = False
+
+        return success
 
     def renumber_all_tracks(self, playlist_entries):
         print(f"\n{STEP} Renumbering files according to playlist order")
