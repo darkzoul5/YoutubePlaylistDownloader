@@ -306,31 +306,45 @@ class PlaylistDownloader:
         print(f"\n{STEP} Renumbering files according to playlist order")
         temp_suffix = ".renametemp"
 
-        final_map = {}
+        # --- Build mapping of safe_title → correct filename ---
+        final_map_audio = {}
+        final_map_video = {}
+
         for idx, video in enumerate(playlist_entries, start=1):
             title = video.get("title", "[Unknown]")
             safe_title = self.sanitize_title(title, video["id"])
-            correct_fname = f"{idx:03d} - {safe_title}.mp3"
-            final_map[safe_title] = correct_fname
 
-        for safe_title, correct_fname in final_map.items():
-            matches = list(self.save_path.glob(f"* - {safe_title}.mp3"))
-            if matches:
-                current_path = matches[0]
-                if current_path.name != correct_fname:
-                    temp_path = current_path.with_suffix(current_path.suffix + temp_suffix)
-                    #print(f"Temporarily renaming '{current_path.name}' → '{temp_path.name}'")
-                    current_path.rename(temp_path)
+            if self.download_mode in ("audio", "both"):
+                final_map_audio[safe_title] = f"{idx:03d} - {safe_title}.mp3"
+            if self.download_mode in ("video", "both"):
+                final_map_video[safe_title] = f"{idx:03d} - {safe_title}.mp4"
 
-        for safe_title, correct_fname in final_map.items():
-            temp_match = list(self.save_path.glob(f"* - {safe_title}.mp3{temp_suffix}"))
-            if temp_match:
-                temp_path = temp_match[0]
-                final_path = self.save_path / correct_fname
-                print(f"Renaming '{temp_path.name}' → '{final_path.name}'")
-                temp_path.rename(final_path)
+        # --- Helper function to rename files in folder ---
+        def rename_files(folder, mapping, ext):
+            folder.mkdir(parents=True, exist_ok=True)
+            for safe_title, correct_fname in mapping.items():
+                matches = list(folder.glob(f"*{ext}"))
+                # Find matching file
+                for m in matches:
+                    if safe_title in m.name:
+                        if m.name != correct_fname:
+                            temp_path = m.with_suffix(m.suffix + temp_suffix)
+                            m.rename(temp_path)
+
+            for safe_title, correct_fname in mapping.items():
+                temp_match = list(folder.glob(f"*{ext}{temp_suffix}"))
+                for temp_path in temp_match:
+                    final_path = folder / correct_fname
+                    print(f"Renaming '{temp_path.name}' → '{final_path.name}'")
+                    temp_path.rename(final_path)
+
+        if self.download_mode in ("audio", "both"):
+            rename_files(self.save_path / "audio", final_map_audio, ".mp3")
+        if self.download_mode in ("video", "both"):
+            rename_files(self.save_path / "video", final_map_video, ".mp4")
 
         print(f"{OK} Renumbering complete.")
+
 
     def update(self):
         playlist_id = self.url or self.save_path or "unknown playlist"
