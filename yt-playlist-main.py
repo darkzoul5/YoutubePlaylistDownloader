@@ -1,3 +1,4 @@
+from distutils.command import config
 import os
 import sys
 import json
@@ -37,6 +38,8 @@ class ConfigLoader:
         "playlists": [
             {
                 "url": "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_HERE",
+                "download_mode": "audio",  # options: audio, video, both
+                "max_video_quality": "1080p", # options: 720p, 1080p, 1440p, 2160p, best
                 "save_path": "./downloads",
                 "archive": "archive.txt"
             }
@@ -44,8 +47,6 @@ class ConfigLoader:
         "yt_dlp_path": "./bin/yt-dlp.exe" if platform.system() == "Windows" else "./bin/yt-dlp",
         "ffmpeg_path": "./bin/ffmpeg.exe" if platform.system() == "Windows" else "./bin/ffmpeg",
         "aria2c_path": "./bin/aria2c.exe" if platform.system() == "Windows" else "./bin/aria2c",
-        "download_mode": "audio",  # options: audio, video, both
-        "max_video_quality": "1080p", # options: 720p, 1080p, 1440p, 2160p, best
         "max_parallel_downloads": 10,
         "aria2c_connections": 8
     }
@@ -138,6 +139,9 @@ class PlaylistDownloader:
             self.skip = False
 
         # Continue with normal initialization
+        self.download_mode = playlist.get("download_mode", config.download_mode)
+        self.max_video_quality = playlist.get("max_video_quality", config.max_video_quality)
+
         self.save_path = Path(playlist.get("save_path", "./music"))
         self.save_path.mkdir(parents=True, exist_ok=True)
 
@@ -150,8 +154,6 @@ class PlaylistDownloader:
         self.yt_dlp = config.yt_dlp_path
         self.ffmpeg = config.ffmpeg_path
         self.aria2c = config.aria2c_path
-        self.download_mode = config.download_mode
-        self.max_video_quality = config.max_video_quality
         self.max_parallel = config.max_parallel_downloads
         self.aria2c_connections = config.aria2c_connections
 
@@ -342,9 +344,9 @@ class PlaylistDownloader:
         new_videos = [v for v in playlist_entries if v["id"] not in archive_ids]
 
         if not new_videos:
-            print(f"{OK} No new tracks found.")
+            print(f"{OK} No new items found.")
         else:
-            print(f"{OK} Found {len(new_videos)} new track(s) to download.")
+            print(f"{OK} Found {len(new_videos)} new item(s) to download.")
 
             idx_map = {v["id"]: i+1 for i, v in enumerate(playlist_entries)}
 
