@@ -91,8 +91,8 @@ jobs:
         run: |
           pip install --upgrade pip
           sudo apt update
-          sudo apt install -y zip curl wget build-essential \
-            pkg-config libssl-dev zlib1g-dev autopoint libtool
+          sudo apt install -y unzip zip curl wget build-essential \
+          pkg-config libssl-dev zlib1g-dev
 
 
       - name: Extract tag name
@@ -100,21 +100,6 @@ jobs:
           REF="${GITEA_REF:-$GITHUB_REF}"
           TAG="${REF#refs/tags/}"
           echo "TAG=$TAG" >> $GITHUB_ENV
-
-      - name: Build aria2c Linux static
-        run: |
-          set -e
-          mkdir -p dist/linux/aria2c_build
-          cd dist/linux/aria2c_build
-          wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
-          tar -xzf aria2-1.37.0.tar.gz
-          cd aria2-1.37.0
-          autoreconf -i
-          ./configure ARIA2_STATIC=yes --with-openssl
-          make -j$(nproc)
-          cd $CI_PROJECT_DIR
-          mkdir -p dist/linux/bin
-          cp src/aria2c dist/linux/bin/aria2c
 
       - name: Prepare Linux package
         run: |
@@ -136,7 +121,7 @@ jobs:
           mv "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp/ffmpeg" "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
           chmod +x "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
 
-          # aria2c minimal fully static
+          # aria2c minimal static
           mkdir -p "$WORKSPACE_ROOT/dist/linux/aria2c_build"
           cd "$WORKSPACE_ROOT"
           wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
