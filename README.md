@@ -6,7 +6,6 @@ Supports audio, video, or both download modes, music and viedos are numbered as 
 
 ---
 
-
 ## Features
 
 - **Download full YouTube playlists** as high-quality MP3 (audio), MP4 (video), or both.
@@ -27,27 +26,33 @@ Supports audio, video, or both download modes, music and viedos are numbered as 
 
 ---
 
-
 ## Installation
 
 ### Quick Start
 
 1. **Download the latest release:**
-  - Go to the [Releases](https://git.darkzoul.org/dark_zoul/YouTube-Playlist-Downloader/releases) page.
+
+- Go to the [Releases](https://git.darkzoul.org/dark_zoul/YouTube-Playlist-Downloader/releases) page.
   - Download the appropriate archive for your platform (Windows or Linux).
 
-2. **Unzip the archive:**
-  - Extract the contents to a folder of your choice.
+1. **Unzip the archive:**
 
-3. **Edit configuration:**
-  - Open `yt-playlist-config.json` and adjust paths, playlist URLs, download mode, and quality as needed.
+- Extract the contents to a folder of your choice.
 
-4. **Run the downloader:**
-  - On Windows:
+1. **Edit configuration:**
+
+- Open `yt-playlist-config.json` and adjust paths, playlist URLs, download mode, and quality as needed.
+
+1. **Run the downloader:**
+
+- On Windows:
+
     ```sh
     python yt-playlist-main.py
     ```
-  - On Linux:
+
+- On Linux:
+
     ```sh
     python3 yt-playlist-main.py
     ```
@@ -55,7 +60,6 @@ Supports audio, video, or both download modes, music and viedos are numbered as 
 ---
 
 ## Usage
-
 
 ### Configuration
 
@@ -87,7 +91,6 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
 - **max_parallel_downloads:** Number of simultaneous downloads.
 - **aria2c_connections:** Connections per download.
 
-
 ### Running
 
 ```sh
@@ -103,8 +106,6 @@ python yt-playlist-main.py
 
 ---
 
-
-
 ## Troubleshooting
 
 - **No binaries found:** Ensure paths in `yt-playlist-config.json` are correct and binaries are present.
@@ -114,13 +115,11 @@ python yt-playlist-main.py
 
 ---
 
-
 ## License
 
 See [LICENSE](LICENSE).
 
 ---
-
 
 ## Credits
 
