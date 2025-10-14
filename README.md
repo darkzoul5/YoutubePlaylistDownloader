@@ -91,7 +91,7 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
 - **max_parallel_downloads:** Number of simultaneous downloads.
 - **aria2c_connections:** Connections per download.
 
-### Running
+---
 
 ### Running
 
