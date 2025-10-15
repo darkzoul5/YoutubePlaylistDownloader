@@ -74,8 +74,13 @@ class ConfigLoader:
 
         # Validate binaries
         self._check_binary(self.yt_dlp_path, "yt-dlp")
-        self._check_binary(self.ffmpeg_path, "ffmpeg")
         self._check_binary(self.aria2c_path, "aria2c")
+        # Only require ffmpeg if download_mode is audio
+        if self.download_mode == "audio":
+            self._check_binary(self.ffmpeg_path, "ffmpeg")
+            if not shutil.which(self.ffmpeg_path) and not Path(self.ffmpeg_path).is_file():
+                print(f"{FAIL} ffmpeg is required for audio mode but was not found.\nPlease install ffmpeg or set the correct path in yt-playlist-config.json.")
+                sys.exit(1)
 
     def _create_default_config(self):
         with self.config_path.open("w", encoding="utf-8") as f:
