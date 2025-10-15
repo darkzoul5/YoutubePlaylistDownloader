@@ -1,5 +1,5 @@
 # Build and push Docker image to Gitea container registry
-name: Build and Push Docker Image
+name: Build Docker Image
 
 on:
   push:
@@ -7,10 +7,10 @@ on:
       - "v*.*.*"
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
     env:
-      REGISTRY: git.darkzoul.org/dark_zoul/YouTube-Playlist-Downloader # <-- Use your actual Gitea registry URL
+      REGISTRY: git.darkzoul.org/dark_zoul/youTube-playlist-downloader 
       IMAGE_NAME: youtube-playlist-downloader
     steps:
       - name: Checkout code
@@ -39,3 +39,4 @@ jobs:
 
       - name: Push Docker image
         run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+  
