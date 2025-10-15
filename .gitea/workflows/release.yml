@@ -163,6 +163,7 @@ jobs:
       - name: Publish release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
+          draft: true
           tag_name: ${{ env.TAG }}
           name: ${{ env.TAG }}
           files: |
