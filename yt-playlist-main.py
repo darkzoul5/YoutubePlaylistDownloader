@@ -5,6 +5,7 @@ import shutil
 import platform
 import time
 import subprocess
+from urllib.parse import urlparse, parse_qs
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -31,7 +32,7 @@ def update_yt_dlp(yt_dlp_path: str):
             text=True
         )
         print(f"{OK} yt-dlp is up to date.")
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         print(f"{WARN} Could not update yt-dlp: Internet unavailable or cannot reach update server")
 
 
@@ -75,8 +76,8 @@ class ConfigLoader:
         # Validate binaries
         self._check_binary(self.yt_dlp_path, "yt-dlp")
         self._check_binary(self.aria2c_path, "aria2c")
-        # Only require ffmpeg if download_mode is audio
-        if self.download_mode == "audio" or self.download_mode == "both":
+        # Only require ffmpeg if download_mode is audio or both
+        if self.download_mode in ("audio", "both"):
             self._check_binary(self.ffmpeg_path, "ffmpeg")
 
     def _create_default_config(self):
@@ -149,13 +150,27 @@ class PlaylistDownloader:
         # Determine a friendly identifier for the playlist
         playlist_id = playlist.get("url") or playlist.get("save_path") or f"playlist #{index+1}"
 
-        # Check for missing or empty URL
+        # Check for missing or empty URL and distinguish videos vs playlists
         self.url = playlist.get("url")
-        if not self.url or not self.url.startswith("https://www.youtube.com/playlist?list=") or len(self.url) <= len("https://www.youtube.com/playlist?list="):
+        self.skip = False
+        if not self.url:
             print(f"{FAIL} Playlist #{index+1} has invalid or empty URL: '{self.url}' skipping")
             self.skip = True
         else:
-            self.skip = False
+            parsed = urlparse(self.url)
+            qs = parse_qs(parsed.query)
+            # If query contains 'list' it's a playlist URL
+            if "list" in qs and qs.get("list"):
+                self.skip = False
+            else:
+                # If URL contains a video id (v param) or is a youtu.be short link, treat as video and skip
+                if "v" in qs or parsed.netloc.endswith("youtu.be") or parsed.path.startswith("/watch"):
+                    print(f"{WARN} URL for playlist #{index+1} looks like a video URL, not a playlist: '{self.url}' — skipping")
+                    self.skip = True
+                else:
+                    # Not clearly a playlist or video — warn and attempt, but typically will fail
+                    print(f"{WARN} URL for playlist #{index+1} does not contain a playlist id: '{self.url}'. Attempting to fetch, but it may fail.")
+                    self.skip = False
 
         # Continue with normal initialization
         self.download_mode = playlist.get("download_mode", config.download_mode)
@@ -188,12 +203,28 @@ class PlaylistDownloader:
         if getattr(self, "skip", False) or not self.url:
             return []  # nothing to fetch
     
-        result = subprocess.run(
-            [self.yt_dlp, "-J", "--flat-playlist", self.url],
-            capture_output=True, text=True, check=True
-        )
-        data = json.loads(result.stdout)
-        entries = data.get("entries", [])
+        try:
+            result = subprocess.run(
+                [self.yt_dlp, "-J", "--flat-playlist", self.url],
+                capture_output=True, text=True, check=True
+            )
+            data = json.loads(result.stdout)
+            entries = data.get("entries", [])
+        except subprocess.CalledProcessError as e:
+            stderr = (e.stderr or "").lower()
+            # Heuristics for private/unavailable playlists
+            if any(k in stderr for k in ("private playlist", "this playlist is private", "sign in", "login required", "403", "authorization failed")):
+                print(f"{WARN} Playlist appears to be private or requires authentication: '{self.url}'. Skipping.")
+                self.skip = True
+                return []
+            # Unknown error — print and skip
+            print(f"{FAIL} Failed to fetch playlist '{self.url}': {e.stderr.strip() if e.stderr else str(e)}")
+            self.skip = True
+            return []
+        except json.JSONDecodeError:
+            print(f"{FAIL} Failed to parse yt-dlp output for URL: '{self.url}'. Skipping.")
+            self.skip = True
+            return []
 
         valid = []
         for v in entries:
