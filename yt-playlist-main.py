@@ -17,6 +17,10 @@ FAIL = "✘"
 WARN = "⚠"
 INFO = "ℹ"
 STEP = "➜"
+
+def is_docker():
+    return os.path.exists("/.dockerenv") or os.getenv("RUNNING_IN_DOCKER") == "true"
+
 def update_yt_dlp(yt_dlp_path: str):
     try:
         subprocess.run(
@@ -43,14 +47,22 @@ class ConfigLoader:
                 "archive": "archive.txt"
             }
         ],
-        "yt_dlp_path": "./bin/yt-dlp.exe" if platform.system() == "Windows" else "./bin/yt-dlp",
-        "ffmpeg_path": "./bin/ffmpeg.exe" if platform.system() == "Windows" else "./bin/ffmpeg",
-        "aria2c_path": "./bin/aria2c.exe" if platform.system() == "Windows" else "./bin/aria2c",
+        "yt_dlp_path": "yt-dlp" if is_docker() else ("./bin/yt-dlp.exe" if platform.system() == "Windows" else "./bin/yt-dlp"),
+        "ffmpeg_path": "ffmpeg" if is_docker() else ("./bin/ffmpeg.exe" if platform.system() == "Windows" else "./bin/ffmpeg"),
+        "aria2c_path": "aria2c" if is_docker() else ("./bin/aria2c.exe" if platform.system() == "Windows" else "./bin/aria2c"),
         "max_parallel_downloads": 10,
         "aria2c_connections": 8
     }
 
-    def __init__(self, config_path: str = "yt-playlist-config.json"):
+    def __init__(self, config_path=None):
+        config_dir = Path("./config")
+        config_dir.mkdir(parents=True, exist_ok=True)
+        if config_path is None:
+            config_path = config_dir / "yt-playlist-config.json"
+        else:
+            config_path = Path(config_path)
+            if not config_path.is_absolute():
+                config_path = config_dir / config_path
         self.config_path = Path(config_path).resolve()
         if not self.config_path.exists():
             self._create_default_config()
