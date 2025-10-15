@@ -3,7 +3,7 @@ name: Build Release Packages
 on:
   push:
     #branches:
-      #- main
+      #- test
     tags:
       - "v*.*.*"
 
@@ -16,7 +16,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
           sudo apt update
           sudo apt install -y unzip zip curl
 
@@ -78,7 +77,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
           sudo apt update
           sudo apt install -y unzip zip curl wget build-essential \
           pkg-config libssl-dev zlib1g-dev
