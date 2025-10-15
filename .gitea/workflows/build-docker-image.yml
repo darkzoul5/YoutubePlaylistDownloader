@@ -20,6 +20,7 @@ jobs:
 
       - name: Extract tag name
         run: |
+         set -e
           REF="${GITEA_REF:-$GITHUB_REF}"
           TAG="${REF#refs/tags/}"
           echo "TAG=$TAG" >> $GITHUB_ENV
@@ -29,12 +30,6 @@ jobs:
 
       - name: Tag Docker image as latest
         run: docker tag ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
-      
-      - name: Upload image artifact
-        uses: christopherhx/gitea-upload-artifact@v4
-        with:
-          name: docker-image
-          path: ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
       - name: Login to the Container registry
         uses: https://gitea.com/docker/login-action@v3
