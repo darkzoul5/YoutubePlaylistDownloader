@@ -48,6 +48,3 @@ jobs:
 
       - name: Push Docker image as latest
         run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
-
-      - name: Push Docker image
-        run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
