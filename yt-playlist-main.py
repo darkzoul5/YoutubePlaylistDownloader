@@ -213,7 +213,7 @@ class PlaylistDownloader:
         except subprocess.CalledProcessError as e:
             stderr = (e.stderr or "").lower()
             # Heuristics for private/unavailable playlists
-            if any(k in stderr for k in ("private playlist", "this playlist is private", "sign in", "login required", "403", "authorization failed")):
+            if any(k in stderr for k in ("private", "sign in", "login required", "403", "Authorization failed")):
                 print(f"{WARN} Playlist appears to be private or requires authentication: '{self.url}'. Skipping.")
                 self.skip = True
                 return []
