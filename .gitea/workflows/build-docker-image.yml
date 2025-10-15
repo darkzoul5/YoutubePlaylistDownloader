@@ -28,14 +28,14 @@ jobs:
       - name: Tag Docker image as latest
         run: docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
+      - name: Log in to Gitea registry
+        run: echo ${{ secrets.DOCKER_BUILD_KEY }} | docker login ${{ env.REGISTRY }} -u ${{ secrets.GITEA_REGISTRY_USERNAME }} --password-stdin
+
       - name: Push Docker image with release tag
         run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
       - name: Push Docker image as latest
         run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-      - name: Log in to Gitea registry
-        run: echo ${{ secrets.DOCKER_BUILD_KEY }} | docker login ${{ env.REGISTRY }} -u ${{ secrets.GITEA_REGISTRY_USERNAME }} --password-stdin
 
       - name: Push Docker image
         run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
