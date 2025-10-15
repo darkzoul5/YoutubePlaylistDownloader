@@ -78,9 +78,6 @@ class ConfigLoader:
         # Only require ffmpeg if download_mode is audio
         if self.download_mode == "audio":
             self._check_binary(self.ffmpeg_path, "ffmpeg")
-            if not shutil.which(self.ffmpeg_path) and not Path(self.ffmpeg_path).is_file():
-                print(f"{FAIL} ffmpeg is required for audio mode but was not found.\nPlease install ffmpeg or set the correct path in yt-playlist-config.json.")
-                sys.exit(1)
 
     def _create_default_config(self):
         with self.config_path.open("w", encoding="utf-8") as f:
@@ -244,7 +241,11 @@ class PlaylistDownloader:
                 "--extract-audio",
                 "--audio-format", "mp3",
                 "--audio-quality", "0",
-                "--ffmpeg-location", str(self.ffmpeg),
+            ]
+            # Only pass --ffmpeg-location if ffmpeg is NOT available on PATH
+            if not shutil.which(str(self.ffmpeg)):
+                args += ["--ffmpeg-location", str(self.ffmpeg)]
+            args += [
                 "--download-archive", str(self.archive),
                 "-o", str(output_path),
                 "--external-downloader", str(self.aria2c),
@@ -262,7 +263,10 @@ class PlaylistDownloader:
                 str(self.yt_dlp),
                 "-f", fmt,
                 "--merge-output-format", "mp4",
-                "--ffmpeg-location", str(self.ffmpeg),
+            ]
+            if not shutil.which(str(self.ffmpeg)):
+                args += ["--ffmpeg-location", str(self.ffmpeg)]
+            args += [
                 "--download-archive", str(self.archive),
                 "-o", str(output_path),
                 "--external-downloader", str(self.aria2c),
@@ -283,7 +287,10 @@ class PlaylistDownloader:
                 "--extract-audio",
                 "--audio-format", "mp3",
                 "--audio-quality", "0",
-                "--ffmpeg-location", str(self.ffmpeg),
+            ]
+            if not shutil.which(str(self.ffmpeg)):
+                audio_args += ["--ffmpeg-location", str(self.ffmpeg)]
+            audio_args += [
                 "--download-archive", str(self.archive),
                 "-o", str(audio_output),
                 "--external-downloader", str(self.aria2c),
@@ -302,7 +309,10 @@ class PlaylistDownloader:
                 str(self.yt_dlp),
                 "-f", fmt,
                 "--merge-output-format", "mp4",
-                "--ffmpeg-location", str(self.ffmpeg),
+            ]
+            if not shutil.which(str(self.ffmpeg)):
+                video_args += ["--ffmpeg-location", str(self.ffmpeg)]
+            video_args += [
                 "--download-archive", str(self.archive),
                 "-o", str(video_output),
                 "--external-downloader", str(self.aria2c),
