@@ -1,0 +1,56 @@
+# Build and push Docker image to Gitea container registry
+name: Build and Push Docker Image
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: git.darkzoul.org/dark_zoul/YouTube-Playlist-Downloader # <-- Use your actual Gitea registry URL
+      IMAGE_NAME: youtube-playlist-downloader
+    steps:
+      - name: Checkout code
+        uses: https://gitea.com/actions/checkout@v5
+
+
+      - name: Download linux-zip artifact
+        uses: christopherhx/gitea-download-artifact@v4
+        with:
+          name: linux-zip
+          path: ./artifact
+
+      - name: Unpack linux-zip artifact
+        run: |
+          unzip ./artifact/*.zip -d ./docker-src
+
+      - name: Copy Dockerfile to build context
+        run: cp Dockerfile ./docker-src/
+
+
+      - name: Extract tag name
+        run: |
+          REF="${GITEA_REF:-$GITHUB_REF}"
+          TAG="${REF#refs/tags/}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Build Docker image with release tag
+        run: docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} ./docker-src
+
+      - name: Tag Docker image as latest
+        run: docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Push Docker image with release tag
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+
+      - name: Push Docker image as latest
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Log in to Gitea registry
+        run: echo ${{ secrets.DOCKER_BUILD_KEY }} | docker login ${{ env.REGISTRY }} -u ${{ secrets.GITEA_REGISTRY_USERNAME }} --password-stdin
+
+      - name: Push Docker image
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
