@@ -82,23 +82,29 @@ class ConfigLoader:
             json.dump(self.DEFAULT_CONFIG, f, indent=2)
 
     def _check_binary(self, path_str, name):
-        path = Path(path_str)
-
-        # If relative, resolve relative to the config file location
-        if not path.is_absolute():
-            path = (self.config_path.parent / path).resolve()
-
-        # Check direct file existence OR system PATH
-        if path.is_file() or shutil.which(str(path)):
-            return
-
-        print(
-            f"{WARN}[ERROR] {name} not found.\n"
-            f"  Configured path: '{path_str}'\n"
-            f"  Resolved absolute path: '{path}'\n"
-            f"Please correct the yt-playlist-config.json path."
-        )
-        sys.exit(1)
+        # If path_str looks like a system binary (no slashes), check PATH only
+        if os.sep not in path_str and '/' not in path_str:
+            if shutil.which(path_str):
+                return
+            print(
+                f"{WARN}[ERROR] {name} not found in system PATH.\n"
+                f"  Configured path: '{path_str}'\n"
+                f"Please install or correct the path in yt-playlist-config.json ."
+            )
+            sys.exit(1)
+        else:
+            path = Path(path_str)
+            if not path.is_absolute():
+                path = (self.config_path.parent / path).resolve()
+            if path.is_file() or shutil.which(str(path)):
+                return
+            print(
+                f"{WARN}[ERROR] {name} not found.\n"
+                f"  Configured path: '{path_str}'\n"
+                f"  Resolved absolute path: '{path}'\n"
+                f"Please correct the yt-playlist-config.json path."
+            )
+            sys.exit(1)
 
     @property
     def playlists(self):
