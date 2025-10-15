@@ -162,7 +162,7 @@ jobs:
     needs: [windows-package, linux-package]
     steps:
       - name: Download all artifacts
-        uses: https://gitea.com/actions/download-artifact@v5
+        uses: christopherhx/gitea-download-artifact@v4
 
       - name: Extract tag name
         run: |
