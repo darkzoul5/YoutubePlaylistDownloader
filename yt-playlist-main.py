@@ -96,7 +96,7 @@ class ConfigLoader:
             f"{WARN}[ERROR] {name} not found.\n"
             f"  Configured path: '{path_str}'\n"
             f"  Resolved absolute path: '{path}'\n"
-            f"Please install or correct the yt-playlist-config.json path."
+            f"Please correct the yt-playlist-config.json path."
         )
         sys.exit(1)
 
