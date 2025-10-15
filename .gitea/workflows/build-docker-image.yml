@@ -30,9 +30,12 @@ jobs:
       - name: Tag Docker image as latest
         run: docker tag ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: Log in to Gitea registry
-        run: echo ${{ secrets.DOCKER_REGISTRY_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ env.OWNER }} --password-stdin
-
+      - name: Login to the Container registry
+        uses: https://gitea.com/docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.OWNER }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
       - name: Push Docker image with release tag
         run: docker push ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
