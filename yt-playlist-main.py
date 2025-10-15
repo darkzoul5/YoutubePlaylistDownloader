@@ -76,7 +76,7 @@ class ConfigLoader:
         self._check_binary(self.yt_dlp_path, "yt-dlp")
         self._check_binary(self.aria2c_path, "aria2c")
         # Only require ffmpeg if download_mode is audio
-        if self.download_mode == "audio":
+        if self.download_mode == "audio" or self.download_mode == "both":
             self._check_binary(self.ffmpeg_path, "ffmpeg")
 
     def _create_default_config(self):
