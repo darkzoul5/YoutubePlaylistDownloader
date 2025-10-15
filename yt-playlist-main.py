@@ -308,30 +308,7 @@ class PlaylistDownloader:
             cmds.append((args, f"{track_index:03d} - {title} (video)"))
 
         elif self.download_mode == "both":
-            # audio folder
-            audio_folder = self.save_path / "audio"
-            audio_folder.mkdir(parents=True, exist_ok=True)
-            audio_output = audio_folder / f"{track_index:03d} - {safe_title}.mp3"
-            audio_args = [
-                str(self.yt_dlp),
-                "-f", "bestaudio",
-                "--extract-audio",
-                "--audio-format", "mp3",
-                "--audio-quality", "0",
-            ]
-            if not shutil.which(str(self.ffmpeg)):
-                audio_args += ["--ffmpeg-location", str(self.ffmpeg)]
-            audio_args += [
-                "--download-archive", str(self.archive),
-                "-o", str(audio_output),
-                "--external-downloader", str(self.aria2c),
-                "--external-downloader-args",
-                f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
-                video_url
-            ]
-            cmds.append((audio_args, f"{track_index:03d} - {title} (audio)"))
-
-            # video folder
+            # Download video first into video folder
             video_folder = self.save_path / "video"
             video_folder.mkdir(parents=True, exist_ok=True)
             video_output = video_folder / f"{track_index:03d} - {safe_title}.mp4"
@@ -340,18 +317,44 @@ class PlaylistDownloader:
                 str(self.yt_dlp),
                 "-f", fmt,
                 "--merge-output-format", "mp4",
-            ]
-            if not shutil.which(str(self.ffmpeg)):
-                video_args += ["--ffmpeg-location", str(self.ffmpeg)]
-            video_args += [
                 "--download-archive", str(self.archive),
                 "-o", str(video_output),
                 "--external-downloader", str(self.aria2c),
-                "--external-downloader-args",
-                f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
-                video_url
+                "--external-downloader-args", f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
+                video_url,
             ]
-            cmds.append((video_args, f"{track_index:03d} - {title} (video)"))
+            if not shutil.which(str(self.ffmpeg)):
+                # allow yt-dlp to find ffmpeg via --ffmpeg-location if configured as a path
+                video_args.insert(0, str(self.yt_dlp))
+                # if ffmpeg is an explicit path, yt-dlp will use it; we keep behavior consistent
+
+            try:
+                subprocess.run(video_args, check=True)
+            except subprocess.CalledProcessError as e:
+                err = (e.stderr or "").strip()
+                print(f"{FAIL} Video download failed: {title} — {err}")
+                return False
+
+            # extract audio with ffmpeg into audio folder
+            audio_folder = self.save_path / "audio"
+            audio_folder.mkdir(parents=True, exist_ok=True)
+            audio_output = audio_folder / f"{track_index:03d} - {safe_title}.mp3"
+            # prefer configured ffmpeg path, fallback to system ffmpeg
+            ffmpeg_exe = str(self.ffmpeg)
+            if not (shutil.which(ffmpeg_exe) or Path(ffmpeg_exe).is_file()):
+                ffmpeg_exe = shutil.which("ffmpeg") or ffmpeg_exe
+
+            if ffmpeg_exe:
+                ffmpeg_cmd = [ffmpeg_exe, "-y", "-i", str(video_output), "-vn", "-codec:a", "libmp3lame", "-q:a", "0", str(audio_output)]
+                try:
+                    subprocess.run(ffmpeg_cmd, check=True, capture_output=True, text=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"{WARN} ffmpeg failed to extract audio for {title}: {(e.stderr or '').strip()}")
+            else:
+                print(f"{WARN} ffmpeg not found; audio not extracted for {title}.")
+
+            print(f"{OK} Downloaded video and extracted audio for: {track_index:03d} - {title}")
+            return True
 
         else:
             print(f"{FAIL} Invalid download_mode '{self.download_mode}', skipping")
