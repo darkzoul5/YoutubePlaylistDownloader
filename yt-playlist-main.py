@@ -518,6 +518,6 @@ class PlaylistManager:
 
 if __name__ == "__main__":
     cfg = ConfigLoader("yt-playlist-config.json")
-    update_yt_dlp(cfg.yt_dlp_path) #update yt-dpl executable
+    if not is_docker(): update_yt_dlp(cfg.yt_dlp_path) #update yt-dpl executable
     manager = PlaylistManager(cfg)
     manager.run()
