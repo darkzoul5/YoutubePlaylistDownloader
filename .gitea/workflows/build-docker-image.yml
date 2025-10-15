@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      REGISTRY: git.darkzoul.org/dark_zoul/youtube-playlist-downloader 
+      REGISTRY: git.darkzoul.org
       IMAGE_NAME: youtube-playlist-downloader
     steps:
       - name: Checkout code
@@ -29,7 +29,7 @@ jobs:
         run: docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Log in to Gitea registry
-        run: echo ${{ secrets.DOCKER_BUILD_KEY }} | docker login ${{ env.REGISTRY }} -u ${{ secrets.GITEA_REGISTRY_USERNAME }} --password-stdin
+        run: echo ${{ secrets.DOCKER_REGISTRY_TOKEN  }} | docker login ${{ env.REGISTRY }} -u ${{ secrets.GITEA_REGISTRY_USERNAME }} --password-stdin
 
       - name: Push Docker image with release tag
         run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
