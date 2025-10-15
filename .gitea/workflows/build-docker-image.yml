@@ -16,21 +16,6 @@ jobs:
       - name: Checkout code
         uses: https://gitea.com/actions/checkout@v5
 
-
-      - name: Download linux-zip artifact
-        uses: christopherhx/gitea-download-artifact@v4
-        with:
-          name: linux-zip
-          path: ./artifact
-
-      - name: Unpack linux-zip artifact
-        run: |
-          unzip ./artifact/*.zip -d ./docker-src
-
-      - name: Copy Dockerfile to build context
-        run: cp Dockerfile ./docker-src/
-
-
       - name: Extract tag name
         run: |
           REF="${GITEA_REF:-$GITHUB_REF}"
