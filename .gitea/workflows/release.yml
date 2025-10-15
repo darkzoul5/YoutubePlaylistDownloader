@@ -14,11 +14,6 @@ jobs:
       - name: Checkout code
         uses: https://gitea.com/actions/checkout@v5
 
-      - name: Set up Python
-        uses: https://gitea.com/actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
       - name: Install dependencies
         run: |
           pip install --upgrade pip
@@ -80,11 +75,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: https://gitea.com/actions/checkout@v5
-
-      - name: Set up Python
-        uses: https://gitea.com/actions/setup-python@v6
-        with:
-          python-version: "3.12"
 
       - name: Install dependencies
         run: |
