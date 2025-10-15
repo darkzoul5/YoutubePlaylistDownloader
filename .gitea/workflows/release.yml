@@ -61,12 +61,11 @@ jobs:
           zip -r "$WORKSPACE_ROOT/$ZIP_NAME" *
           echo "ZIP_PATH=$WORKSPACE_ROOT/$ZIP_NAME" >> $GITHUB_ENV
 
-      - name: Upload Windows release
-        uses: https://gitea.com/actions/gitea-release-action@v1
+      - name: Upload Windows artifact
+        uses: https://gitea.com/actions/upload-artifact@v4
         with:
-          files: ${{ env.ZIP_PATH }}
-          tag_name: ${{ env.TAG }}
-          name: ${{ env.TAG }}
+          name: windows-zip
+          path: ${{ env.ZIP_PATH }}
 
 
 
@@ -149,9 +148,33 @@ jobs:
           zip -r "$WORKSPACE_ROOT/$ZIP_NAME" *
           echo "ZIP_PATH=$WORKSPACE_ROOT/$ZIP_NAME" >> $GITHUB_ENV
 
-      - name: Upload Linux release
+      - name: Upload Linux artifact
+        uses: https://gitea.com/actions/upload-artifact@v4
+        with:
+          name: linux-zip
+          path: ${{ env.ZIP_PATH }}
+
+
+
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [windows-package, linux-package]
+    steps:
+      - name: Download all artifacts
+        uses: https://gitea.com/actions/download-artifact@v5
+
+      - name: Extract tag name
+        run: |
+          REF="${GITEA_REF:-$GITHUB_REF}"
+          TAG="${REF#refs/tags/}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Publish release
         uses: https://gitea.com/actions/gitea-release-action@v1
         with:
-          files: ${{ env.ZIP_PATH }}
           tag_name: ${{ env.TAG }}
           name: ${{ env.TAG }}
+          files: |
+            linux-zip/*
+            windows-zip/*
