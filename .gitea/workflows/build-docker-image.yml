@@ -26,7 +26,7 @@ jobs:
           echo "TAG=$TAG" >> $GITHUB_ENV
       
       - name: Download linux-zip artifact from other run 
-        uses: actions/download-artifact@v4
+        uses: christopherhx/gitea-download-artifact@v4
         with:
           name: linux-zip
           github-token: ${{ secrets.REPO_READ }}
