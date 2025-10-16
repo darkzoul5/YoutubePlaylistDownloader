@@ -211,7 +211,7 @@ jobs:
       - name: Load docker image from tar
         run: |
           set -e
-          docker load -i docker-image.tar
+          docker load -i /docker-image/docker-image.tar
 
       - name: Push Docker image with release tag
         run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
