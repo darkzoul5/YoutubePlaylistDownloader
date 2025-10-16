@@ -98,7 +98,8 @@ class ConfigLoader:
         else:
             path = Path(path_str)
             if not path.is_absolute():
-                path = (self.config_path.parent / path).resolve()
+                script_dir = Path(__file__).resolve().parent
+                path = (script_dir / path).resolve()
             if path.is_file() or shutil.which(str(path)):
                 return
             print(
