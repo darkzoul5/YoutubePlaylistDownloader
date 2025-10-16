@@ -150,6 +150,9 @@ jobs:
       REGISTRY_OWNER: dark_zoul
       IMAGE_NAME: youtube-playlist-downloader
     steps:
+      - name: Checkout code
+        uses: https://gitea.com/actions/checkout@v5
+        
       - name: Extract tag name
         run: |
          set -e
