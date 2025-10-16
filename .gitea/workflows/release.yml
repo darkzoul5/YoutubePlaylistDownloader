@@ -144,6 +144,7 @@ jobs:
 
   build-docker-image:
     runs-on: ubuntu-latest
+    needs: [build-linux-package]
     env:
       REGISTRY_URL: git.darkzoul.org
       REGISTRY_OWNER: dark_zoul
@@ -159,12 +160,12 @@ jobs:
       - name: Download linux-zip artifact 
         uses: christopherhx/gitea-download-artifact@v4
         with:
-          name: yt-playlist-linux-${{TAG}}.tar.gz
+          name: linux-zip
 
       - name: Extract linux-zip artifact
         run: |
           set -e
-          tar -xzf yt-playlist-linux-${{TAG}}.tar.gz
+          tar -xzf yt-playlist-linux-${TAG}.tar.gz
 
       - name: Build Docker image with release tag
         run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
