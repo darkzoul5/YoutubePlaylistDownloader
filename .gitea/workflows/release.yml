@@ -152,7 +152,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: https://gitea.com/actions/checkout@v5
-        
+
       - name: Extract tag name
         run: |
          set -e
@@ -175,8 +175,7 @@ jobs:
       
       - name: Save Docker image as tar
         run: |
-          docker save -o docker-image.tar docker-image:${{ env.TAG }}
-
+          docker save -o docker-image.tar ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
       
 
 
@@ -204,10 +203,10 @@ jobs:
           username: ${{ env.REGISTRY_OWNER }}
           password: ${{ secrets.MY_REGISTRY_ACCESS_TOKEN }}
 
-      - name: Extract docker image tar
+      - name: Load docker image from tar
         run: |
           set -e
-          tar -xf docker-image.tar
+          docker load -i docker-image.tar
 
       - name: Push Docker image with release tag
         run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
