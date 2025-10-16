@@ -8,7 +8,7 @@ on:
       - "v*.*.*"
 
 jobs:
-  windows-package:
+  build-windows-package:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -69,7 +69,7 @@ jobs:
 
 
 
-  linux-package:
+  build-linux-package:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -142,12 +142,50 @@ jobs:
           name: linux-zip
           path: ${{ env.ZIP_PATH }}
 
+  build-docker-image:
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY_URL: git.darkzoul.org
+      REGISTRY_OWNER: dark_zoul
+      IMAGE_NAME: youtube-playlist-downloader
+    steps:
+      - name: Checkout code
+        uses: https://gitea.com/actions/checkout@v5
 
+      - name: Extract tag name
+        run: |
+         set -e
+          REF="${GITEA_REF:-$GITHUB_REF}"
+          TAG="${REF#refs/tags/}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+      
+      - name: Download linux-zip artifact 
+        uses: christopherhx/gitea-download-artifact@v4
+        with:
+          name: linux-zip
+
+      - name: Extract linux-zip artifact
+        run: |
+          set -e
+          tar -xzf linux-zip.tar.gz
+
+      - name: Build Docker image with release tag
+        run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+      
+      - name: Save Docker image as tar
+        run: |
+          docker save -o docker-image.tar docker-image:${{ env.TAG }}
+
+      
 
 
   release:
     runs-on: ubuntu-latest
-    needs: [windows-package, linux-package]
+    needs: [build-windows-package, build-linux-package, build-docker-image]
+    env:
+      REGISTRY_URL: git.darkzoul.org
+      REGISTRY_OWNER: dark_zoul
+      IMAGE_NAME: youtube-playlist-downloader
     steps:
       - name: Download all artifacts
         uses: christopherhx/gitea-download-artifact@v4
@@ -157,6 +195,27 @@ jobs:
           REF="${GITEA_REF:-$GITHUB_REF}"
           TAG="${REF#refs/tags/}"
           echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Login to the Container registry
+        uses: https://gitea.com/docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_URL }}
+          username: ${{ env.REGISTRY_OWNER }}
+          password: ${{ secrets.MY_REGISTRY_ACCESS_TOKEN }}
+
+      - name: Extract docker image tar
+        run: |
+          set -e
+          tar -xf docker-image.tar
+
+      - name: Push Docker image with release tag
+        run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+
+      - name: Build Docker image as latest (distinct digest)
+        run: docker build ./ --label build_as_latest=true -t ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Push Docker image as latest
+        run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest    
 
       - name: Publish release
         uses: https://gitea.com/actions/gitea-release-action@v1
