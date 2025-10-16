@@ -192,6 +192,9 @@ jobs:
       REGISTRY_OWNER: dark_zoul
       IMAGE_NAME: youtube-playlist-downloader
     steps:
+      - name: Checkout code
+        uses: https://gitea.com/actions/checkout@v5
+        
       - name: Download all artifacts
         uses: christopherhx/gitea-download-artifact@v4
 
