@@ -113,16 +113,10 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
 
 You can run YouTube Playlist Downloader using the official Docker image.
 
-### Pull the Docker image
+### Run the container
 
 ```pwsh
-docker pull git.darkzoul.org/dark_zoul/youtube-playlist-downloader:latest
-```
-
-### Run the container with required volumes
-
-```pwsh
-docker run -v /path/to/downloads:/app/downloads -v /path/to/config:/app/config <your-docker-image-name>
+docker run -v /path/to/downloads:/app/downloads -v /path/to/config:/app/config git.darkzoul.org/dark_zoul/youtube-playlist-downloader:latest
 ```
 
 Replace `/path/to/downloads` and `/path/to/config` with your local directories.
