@@ -130,10 +130,10 @@ jobs:
           # Cleanup
           rm -rf "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" "$WORKSPACE_ROOT/dist/linux/aria2c_build" "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" "$WORKSPACE_ROOT/aria2-1.37.0" "$WORKSPACE_ROOT/aria2-1.37.0.tar.gz"
 
-          # Zip everything
+          # GZip everything
           cd "$WORKSPACE_ROOT/dist/linux"
-          ZIP_NAME="yt-playlist-linux-${TAG}.zip"
-          zip -r "$WORKSPACE_ROOT/$ZIP_NAME" *
+          ZIP_NAME="yt-playlist-linux-${TAG}.tar.gz"
+          tar -czf "$WORKSPACE_ROOT/$ZIP_NAME" *
           echo "ZIP_PATH=$WORKSPACE_ROOT/$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload Linux artifact
