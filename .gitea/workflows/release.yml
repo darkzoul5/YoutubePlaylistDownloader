@@ -176,7 +176,12 @@ jobs:
       - name: Save Docker image as tar
         run: |
           docker save -o docker-image.tar ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
-      
+
+      - name: Upload docker-image artifact
+        uses: christopherhx/gitea-upload-artifact@v4
+        with:
+          name: docker-image
+          path: docker-image.tar
 
 
   release:
