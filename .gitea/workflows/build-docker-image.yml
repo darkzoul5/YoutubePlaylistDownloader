@@ -27,10 +27,7 @@ jobs:
 
       - name: Build Docker image with release tag
         run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
-
-      - name: Tag Docker image as latest
-        run: docker tag ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
-
+      
       - name: Login to the Container registry
         uses: https://gitea.com/docker/login-action@v3
         with:
@@ -40,6 +37,9 @@ jobs:
           
       - name: Push Docker image with release tag
         run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+
+      - name: Build Docker image as latest (distinct digest)
+        run: docker build ./ --label build_as_latest=true -t ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Push Docker image as latest
         run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
