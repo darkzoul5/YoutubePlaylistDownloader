@@ -149,9 +149,6 @@ jobs:
       REGISTRY_OWNER: dark_zoul
       IMAGE_NAME: youtube-playlist-downloader
     steps:
-      - name: Checkout code
-        uses: https://gitea.com/actions/checkout@v5
-
       - name: Extract tag name
         run: |
          set -e
@@ -162,12 +159,12 @@ jobs:
       - name: Download linux-zip artifact 
         uses: christopherhx/gitea-download-artifact@v4
         with:
-          name: linux-zip
+          name: yt-playlist-linux-${TAG}.tar.gz
 
       - name: Extract linux-zip artifact
         run: |
           set -e
-          tar -xzf linux-zip.tar.gz
+          tar -xzf yt-playlist-linux-${TAG}.tar.gz
 
       - name: Build Docker image with release tag
         run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
