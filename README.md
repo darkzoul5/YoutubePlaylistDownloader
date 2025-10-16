@@ -108,6 +108,50 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
   - Offer to clean up files that are no longer in the playlist
 
 ---
+ 
+## Docker Usage
+
+You can run YouTube Playlist Downloader using the official Docker image.
+
+### Pull the Docker image
+
+```pwsh
+docker pull git.darkzoul.org/dark_zoul/youtube-playlist-downloader:latest
+```
+
+### Run the container with required volumes
+
+```pwsh
+docker run -v /path/to/downloads:/app/downloads -v /path/to/config:/app/config <your-docker-image-name>
+```
+
+Replace `/path/to/downloads` and `/path/to/config` with your local directories.
+
+**Required volumes:**
+
+- `/app/downloads`: Directory for downloaded audio/videos
+- `/app/config`: Directory for the configuration file
+
+### Docker Compose example
+
+Create a `docker-compose.yml` with the following content (replace the host paths as needed):
+
+```yaml
+services:
+  yt-downloader:
+    image: git.darkzoul.org/dark_zoul/youtube-playlist-downloader:latest
+    container_name: yt-downloader
+    restart: no
+    volumes:
+      - /path/to/downloads:/app/downloads
+      - /path/to/config:/app/config
+```
+
+Run it with:
+
+```pwsh
+docker compose up -d
+```
 
 ## Troubleshooting
 
@@ -129,5 +173,3 @@ See [LICENSE](LICENSE).
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 - [ffmpeg](https://ffmpeg.org/)
 - [aria2c](https://github.com/aria2/aria2)
-
----
