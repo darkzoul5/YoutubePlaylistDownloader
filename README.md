@@ -71,7 +71,7 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
     {
       "url": "https://www.youtube.com/playlist?list=playlistidhere",
       "download_mode": "audio",         
-      "max_video_quality": "1080p"
+      "max_video_quality": "1080p",
       "save_path": "./music",
       "archive": "archive.txt",
     }
