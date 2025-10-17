@@ -175,13 +175,13 @@ jobs:
 
       - name: Save Docker image ${TAG} as tar
         run: |
-          docker save -o docker-image-${TAG}.tar ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          docker save -o docker-image.tar ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
       - name: Upload docker-image-${TAG} artifact
         uses: christopherhx/gitea-upload-artifact@v4
         with:
-          name: docker-image-${TAG}
-          path: docker-image-${TAG}.tar
+          name: docker-image
+          path: docker-image.tar
 
       - name: Build Docker image as latest (distinct digest)
         run: docker build ./ --label build_as_latest=true -t ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
@@ -224,7 +224,7 @@ jobs:
       - name: Load docker image from tar
         run: |
           set -e
-          docker load -i docker-image-${TAG}/docker-image-${TAG}.tar
+          docker load -i docker-image/docker-image.tar
 
       - name: Push Docker image with release tag
         run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
