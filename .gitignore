@@ -2,9 +2,8 @@
 
 
 #Custom for this project
-yt-playlist-config.json
+config/yt-playlist-config.json
 /bin/
-/config/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
