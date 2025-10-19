@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
 if platform.system() == "Windows":
-    sys.stdout.reconfigure(encoding="utf-8") # type: ignore
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
 
 OK = "✔"
 FAIL = "✘"
@@ -19,8 +19,10 @@ WARN = "⚠"
 INFO = "ℹ"
 STEP = "➜"
 
+
 def is_docker():
     return os.path.exists("/.dockerenv") or os.getenv("RUNNING_IN_DOCKER") == "true"
+
 
 def update_yt_dlp(yt_dlp_path: str):
     try:
@@ -28,13 +30,14 @@ def update_yt_dlp(yt_dlp_path: str):
             [yt_dlp_path, "-U"],
             check=True,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,   # capture error output
-            text=True
+            stderr=subprocess.PIPE,  # capture error output
+            text=True,
         )
         print(f"{OK} yt-dlp is up to date.")
     except subprocess.CalledProcessError:
-        print(f"{WARN} Could not update yt-dlp: Internet unavailable or cannot reach update server")
-
+        print(
+            f"{WARN} Could not update yt-dlp: Internet unavailable or cannot reach update server"
+        )
 
 
 class ConfigLoader:
@@ -43,16 +46,16 @@ class ConfigLoader:
             {
                 "url": "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID_HERE",
                 "download_mode": "audio",  # options: audio, video, both
-                "max_video_quality": "1080p", # options: 720p, 1080p, 1440p, 2160p, best
+                "max_video_quality": "1080p",  # options: 720p, 1080p, 1440p, 2160p, best
                 "save_path": "./downloads",
-                "archive": "archive.txt"
+                "archive": "archive.txt",
             }
         ],
         "yt_dlp_path": "yt-dlp" if is_docker() else ("./bin/yt-dlp.exe" if platform.system() == "Windows" else "./bin/yt-dlp"),
         "ffmpeg_path": "ffmpeg" if is_docker() else ("./bin/ffmpeg.exe" if platform.system() == "Windows" else "./bin/ffmpeg"),
         "aria2c_path": "aria2c" if is_docker() else ("./bin/aria2c.exe" if platform.system() == "Windows" else "./bin/aria2c"),
         "max_parallel_downloads": 10,
-        "aria2c_connections": 8
+        "aria2c_connections": 8,
     }
 
     def __init__(self, config_path=None):
@@ -67,7 +70,9 @@ class ConfigLoader:
         self.config_path = Path(config_path).resolve()
         if not self.config_path.exists():
             self._create_default_config()
-            print(f"{INFO} Default config created at '{self.config_path}'. Please edit it and rerun.")
+            print(
+                f"{INFO} Default config created at '{self.config_path}'. Please edit it and rerun."
+            )
             sys.exit(0)
 
         with self.config_path.open("r", encoding="utf-8") as f:
@@ -86,7 +91,7 @@ class ConfigLoader:
 
     def _check_binary(self, path_str, name):
         # If path_str looks like a system binary (no slashes), check PATH only
-        if os.sep not in path_str and '/' not in path_str:
+        if os.sep not in path_str and "/" not in path_str:
             if shutil.which(path_str):
                 return
             print(
@@ -129,7 +134,7 @@ class ConfigLoader:
     @property
     def download_mode(self):
         return self.data.get("download_mode", "audio")
-    
+
     @property
     def max_video_quality(self):
         return self.data.get("max_video_quality", "1080p")
@@ -147,7 +152,6 @@ class PlaylistDownloader:
     illegal_chars = '<>:"/\\|?*'
 
     def __init__(self, config: ConfigLoader, playlist: dict, index: int):
-
         # Determine a friendly identifier for the playlist
         # playlist_id = playlist.get("url") or playlist.get("save_path") or f"playlist #{index+1}"
 
@@ -155,7 +159,9 @@ class PlaylistDownloader:
         self.url = playlist.get("url")
         self.skip = False
         if not self.url:
-            print(f"{FAIL} Playlist #{index+1} has invalid or empty URL: '{self.url}' skipping")
+            print(
+                f"{FAIL} Playlist #{index + 1} has invalid or empty URL: '{self.url}' skipping"
+            )
             self.skip = True
         else:
             parsed = urlparse(self.url)
@@ -165,17 +171,27 @@ class PlaylistDownloader:
                 self.skip = False
             else:
                 # If URL contains a video id (v param) or is a youtu.be short link, treat as video and skip
-                if "v" in qs or parsed.netloc.endswith("youtu.be") or parsed.path.startswith("/watch"):
-                    print(f"{WARN} URL for playlist #{index+1} looks like a video URL, not a playlist: '{self.url}' — skipping")
+                if (
+                    "v" in qs
+                    or parsed.netloc.endswith("youtu.be")
+                    or parsed.path.startswith("/watch")
+                ):
+                    print(
+                        f"{WARN} URL for playlist #{index + 1} looks like a video URL, not a playlist: '{self.url}' — skipping"
+                    )
                     self.skip = True
                 else:
                     # Not clearly a playlist or video — warn and attempt, but typically will fail
-                    print(f"{WARN} URL for playlist #{index+1} does not contain a playlist id: '{self.url}'. Attempting to fetch, but it may fail.")
+                    print(
+                        f"{WARN} URL for playlist #{index + 1} does not contain a playlist id: '{self.url}'. Attempting to fetch, but it may fail."
+                    )
                     self.skip = False
 
         # Continue with normal initialization
         self.download_mode = playlist.get("download_mode", config.download_mode)
-        self.max_video_quality = playlist.get("max_video_quality", config.max_video_quality)
+        self.max_video_quality = playlist.get(
+            "max_video_quality", config.max_video_quality
+        )
 
         self.save_path = Path(playlist.get("save_path", "./music"))
         self.save_path.mkdir(parents=True, exist_ok=True)
@@ -192,9 +208,10 @@ class PlaylistDownloader:
         self.max_parallel = config.max_parallel_downloads
         self.aria2c_connections = config.aria2c_connections
 
-
     def sanitize_title(self, title, fallback_id):
-        safe_title = title.translate(str.maketrans({c: '-' for c in self.illegal_chars})).strip()
+        safe_title = title.translate(
+            str.maketrans({c: "-" for c in self.illegal_chars})
+        ).strip()
         return safe_title if safe_title else fallback_id
 
     def get_file_path(self, track_index, title):
@@ -203,27 +220,44 @@ class PlaylistDownloader:
     def fetch_videos(self):
         if getattr(self, "skip", False) or not self.url:
             return []  # nothing to fetch
-    
+
         try:
             result = subprocess.run(
                 [self.yt_dlp, "-J", "--flat-playlist", self.url],
-                capture_output=True, text=True, check=True
+                capture_output=True,
+                text=True,
+                check=True,
             )
             data = json.loads(result.stdout)
             entries = data.get("entries", [])
         except subprocess.CalledProcessError as e:
             stderr = (e.stderr or "").lower()
             # Heuristics for private/unavailable playlists
-            if any(k in stderr for k in ("private", "sign in", "login required", "403", "Authorization failed")):
-                print(f"{WARN} Playlist appears to be private or requires authentication: '{self.url}'. Skipping.")
+            if any(
+                k in stderr
+                for k in (
+                    "private",
+                    "sign in",
+                    "login required",
+                    "403",
+                    "Authorization failed",
+                )
+            ):
+                print(
+                    f"{WARN} Playlist appears to be private or requires authentication: '{self.url}'. Skipping."
+                )
                 self.skip = True
                 return []
             # Unknown error — print and skip
-            print(f"{FAIL} Failed to fetch playlist '{self.url}': {e.stderr.strip() if e.stderr else str(e)}")
+            print(
+                f"{FAIL} Failed to fetch playlist '{self.url}': {e.stderr.strip() if e.stderr else str(e)}"
+            )
             self.skip = True
             return []
         except json.JSONDecodeError:
-            print(f"{FAIL} Failed to parse yt-dlp output for URL: '{self.url}'. Skipping.")
+            print(
+                f"{FAIL} Failed to parse yt-dlp output for URL: '{self.url}'. Skipping."
+            )
             self.skip = True
             return []
 
@@ -258,53 +292,68 @@ class PlaylistDownloader:
                 "1080p": "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
                 "1440p": "bestvideo[height<=1440]+bestaudio/best[height<=1440]",
                 "2160p": "bestvideo[height<=2160]+bestaudio/best[height<=2160]",
-                "best": "bestvideo+bestaudio/best"
+                "best": "bestvideo+bestaudio/best",
             }
             return mapping.get(max_quality.lower(), mapping["1080p"])
 
         cmds = []
 
         if self.download_mode == "audio":
-            output_path = self.save_path / "audio" / f"{track_index:03d} - {safe_title}.mp3"
+            output_path = (
+                self.save_path / "audio" / f"{track_index:03d} - {safe_title}.mp3"
+            )
             output_path.parent.mkdir(parents=True, exist_ok=True)
             args = [
                 str(self.yt_dlp),
-                "-f", "bestaudio",
+                "-f",
+                "bestaudio",
                 "--extract-audio",
-                "--audio-format", "mp3",
-                "--audio-quality", "0",
+                "--audio-format",
+                "mp3",
+                "--audio-quality",
+                "0",
             ]
             # Only pass --ffmpeg-location if ffmpeg is NOT available on PATH
             if not shutil.which(str(self.ffmpeg)):
                 args += ["--ffmpeg-location", str(self.ffmpeg)]
             args += [
-                "--download-archive", str(self.archive),
-                "-o", str(output_path),
-                "--external-downloader", str(self.aria2c),
+                "--download-archive",
+                str(self.archive),
+                "-o",
+                str(output_path),
+                "--external-downloader",
+                str(self.aria2c),
                 "--external-downloader-args",
                 f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
-                video_url
+                video_url,
             ]
             cmds.append((args, f"{track_index:03d} - {title} (audio)"))
 
         elif self.download_mode == "video":
-            output_path = self.save_path / "video" / f"{track_index:03d} - {safe_title}.mp4"
+            output_path = (
+                self.save_path / "video" / f"{track_index:03d} - {safe_title}.mp4"
+            )
             output_path.parent.mkdir(parents=True, exist_ok=True)
             fmt = build_video_format(self.max_video_quality)
             args = [
                 str(self.yt_dlp),
-                "-f", fmt,
-                "--merge-output-format", "mp4",
+                "-f",
+                fmt,
+                "--merge-output-format",
+                "mp4",
             ]
             if not shutil.which(str(self.ffmpeg)):
                 args += ["--ffmpeg-location", str(self.ffmpeg)]
             args += [
-                "--download-archive", str(self.archive),
-                "-o", str(output_path),
-                "--external-downloader", str(self.aria2c),
+                "--download-archive",
+                str(self.archive),
+                "-o",
+                str(output_path),
+                "--external-downloader",
+                str(self.aria2c),
                 "--external-downloader-args",
                 f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
-                video_url
+                video_url,
             ]
             cmds.append((args, f"{track_index:03d} - {title} (video)"))
 
@@ -316,12 +365,18 @@ class PlaylistDownloader:
             fmt = build_video_format(self.max_video_quality)
             video_args = [
                 str(self.yt_dlp),
-                "-f", fmt,
-                "--merge-output-format", "mp4",
-                "--download-archive", str(self.archive),
-                "-o", str(video_output),
-                "--external-downloader", str(self.aria2c),
-                "--external-downloader-args", f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
+                "-f",
+                fmt,
+                "--merge-output-format",
+                "mp4",
+                "--download-archive",
+                str(self.archive),
+                "-o",
+                str(video_output),
+                "--external-downloader",
+                str(self.aria2c),
+                "--external-downloader-args",
+                f"aria2c:-x {self.aria2c_connections} -s {self.aria2c_connections}",
                 video_url,
             ]
             if not shutil.which(str(self.ffmpeg)):
@@ -346,15 +401,32 @@ class PlaylistDownloader:
                 ffmpeg_exe = shutil.which("ffmpeg") or ffmpeg_exe
 
             if ffmpeg_exe:
-                ffmpeg_cmd = [ffmpeg_exe, "-y", "-i", str(video_output), "-vn", "-codec:a", "libmp3lame", "-q:a", "0", str(audio_output)]
+                ffmpeg_cmd = [
+                    ffmpeg_exe,
+                    "-y",
+                    "-i",
+                    str(video_output),
+                    "-vn",
+                    "-codec:a",
+                    "libmp3lame",
+                    "-q:a",
+                    "0",
+                    str(audio_output),
+                ]
                 try:
-                    subprocess.run(ffmpeg_cmd, check=True, capture_output=True, text=True)
+                    subprocess.run(
+                        ffmpeg_cmd, check=True, capture_output=True, text=True
+                    )
                 except subprocess.CalledProcessError as e:
-                    print(f"{WARN} ffmpeg failed to extract audio for {title}: {(e.stderr or '').strip()}")
+                    print(
+                        f"{WARN} ffmpeg failed to extract audio for {title}: {(e.stderr or '').strip()}"
+                    )
             else:
                 print(f"{WARN} ffmpeg not found; audio not extracted for {title}.")
 
-            print(f"{OK} Downloaded video and extracted audio for: {track_index:03d} - {title}")
+            print(
+                f"{OK} Downloaded video and extracted audio for: {track_index:03d} - {title}"
+            )
             return True
 
         else:
@@ -368,12 +440,13 @@ class PlaylistDownloader:
                 subprocess.run(args, check=True)
                 print(f"{OK} Downloaded: {label}")
             except subprocess.CalledProcessError as e:
-                err_msg = e.stderr.strip().splitlines()[-1] if e.stderr else "Unknown error"
+                err_msg = (
+                    e.stderr.strip().splitlines()[-1] if e.stderr else "Unknown error"
+                )
                 print(f"{FAIL} Download failed: {label} — {err_msg}")
                 success = False
 
         return success
-
 
     def renumber_all_tracks(self, playlist_entries):
         print(f"\n{STEP} Renumbering files according to playlist order")
@@ -418,11 +491,12 @@ class PlaylistDownloader:
 
         print(f"{OK} Renumbering complete.")
 
-
     def update(self):
         playlist_id = self.url or self.save_path or "unknown playlist"
         if getattr(self, "skip", False):
-            print(f"{WARN} Skipping playlist '{playlist_id}': URL missing in the config.")
+            print(
+                f"{WARN} Skipping playlist '{playlist_id}': URL missing in the config."
+            )
             return
 
         print(f"{STEP} Updating playlist: {playlist_id}")
@@ -435,10 +509,13 @@ class PlaylistDownloader:
         else:
             print(f"{OK} Found {len(new_videos)} new item(s) to download.")
 
-            idx_map = {v["id"]: i+1 for i, v in enumerate(playlist_entries)}
+            idx_map = {v["id"]: i + 1 for i, v in enumerate(playlist_entries)}
 
             with ThreadPoolExecutor(max_workers=self.max_parallel) as executor:
-                futures = [executor.submit(self.download_video, v, idx_map[v["id"]]) for v in new_videos]
+                futures = [
+                    executor.submit(self.download_video, v, idx_map[v["id"]])
+                    for v in new_videos
+                ]
                 for f in as_completed(futures):
                     try:
                         f.result()
@@ -462,14 +539,16 @@ class PlaylistDownloader:
             for file in folder.glob(f"*{ext}"):
                 parts = file.name.split(" - ", 1)
                 if len(parts) == 2:
-                    safe_title_in_file = parts[1][:-len(ext)]
+                    safe_title_in_file = parts[1][: -len(ext)]
                     if safe_title_in_file not in valid_titles:
                         to_delete.append(file)
 
             if not to_delete:
                 return
 
-            print(f"{WARN} The following files in '{folder}' are not in the playlist and will be deleted:")
+            print(
+                f"{WARN} The following files in '{folder}' are not in the playlist and will be deleted:"
+            )
             for f in to_delete:
                 print(f"  {f.name}")
 
@@ -495,7 +574,6 @@ class PlaylistDownloader:
             clean_folder(self.save_path / "video", ".mp4")
 
 
-
 class PlaylistManager:
     def __init__(self, config: ConfigLoader):
         self.config = config
@@ -505,12 +583,16 @@ class PlaylistManager:
         ]
 
     def run(self):
-        total_connections = self.config.max_parallel_downloads * self.config.aria2c_connections
+        total_connections = (
+            self.config.max_parallel_downloads * self.config.aria2c_connections
+        )
         if total_connections > 100:
-            print("\033[91m"
-                  f"{WARN}[WARNING] Total connections ({self.config.max_parallel_downloads} × "
-                  f"{self.config.aria2c_connections} = {total_connections}) may overload your network! Pausing 5 seconds..."
-                  "\033[0m")
+            print(
+                "\033[91m"
+                f"{WARN}[WARNING] Total connections ({self.config.max_parallel_downloads} × "
+                f"{self.config.aria2c_connections} = {total_connections}) may overload your network! Pausing 5 seconds..."
+                "\033[0m"
+            )
             time.sleep(5)
 
         for playlist in self.playlists:
@@ -519,6 +601,7 @@ class PlaylistManager:
 
 if __name__ == "__main__":
     cfg = ConfigLoader("yt-playlist-config.json")
-    if not is_docker(): update_yt_dlp(cfg.yt_dlp_path) #update yt-dpl executable
+    if not is_docker():
+        update_yt_dlp(cfg.yt_dlp_path)  # update yt-dlp executable
     manager = PlaylistManager(cfg)
     manager.run()
