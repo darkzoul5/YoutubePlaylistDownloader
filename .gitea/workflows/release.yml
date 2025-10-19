@@ -148,7 +148,7 @@ jobs:
 
   build-docker-image:
     runs-on: ubuntu-latest
-    needs: [build-linux-package]
+    needs: [build-linux-package, release]
     env:
       REGISTRY_URL: git.darkzoul.org
       REGISTRY_OWNER: dark_zoul
