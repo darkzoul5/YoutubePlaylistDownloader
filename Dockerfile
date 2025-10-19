@@ -7,4 +7,4 @@ COPY ./bin/ffmpeg /app/bin
 COPY ./bin/yt-dlp /app/bin
 COPY ./bin/aria2c /app/bin
 
-CMD ["python", "yt-playlist-main.py"]
+CMD ["python","-m","ytplaylist.cli"]
