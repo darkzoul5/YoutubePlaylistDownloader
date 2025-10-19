@@ -152,9 +152,6 @@ class PlaylistDownloader:
     illegal_chars = '<>:"/\\|?*'
 
     def __init__(self, config: ConfigLoader, playlist: dict, index: int):
-        # Determine a friendly identifier for the playlist
-        # playlist_id = playlist.get("url") or playlist.get("save_path") or f"playlist #{index+1}"
-
         # Check for missing or empty URL and distinguish videos vs playlists
         self.url = playlist.get("url")
         self.skip = False
