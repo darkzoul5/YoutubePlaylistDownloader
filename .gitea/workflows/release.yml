@@ -31,6 +31,8 @@ jobs:
           WORKSPACE_ROOT="${GITEA_WORKSPACE:-$PWD}"
           mkdir -p "$WORKSPACE_ROOT/dist/windows"
           cp "$WORKSPACE_ROOT/yt-playlist-main.py" "$WORKSPACE_ROOT/dist/windows/"
+          cp -r "$WORKSPACE_ROOT/ytplaylist" "$WORKSPACE_ROOT/dist/windows/"
+          cp -r "$WORKSPACE_ROOT/config" "$WORKSPACE_ROOT/dist/windows/"
 
           mkdir -p "$WORKSPACE_ROOT/dist/windows/bin"
 
@@ -94,6 +96,8 @@ jobs:
           WORKSPACE_ROOT="${GITEA_WORKSPACE:-$PWD}"
           mkdir -p "$WORKSPACE_ROOT/dist/linux"
           cp "$WORKSPACE_ROOT/yt-playlist-main.py" "$WORKSPACE_ROOT/dist/linux/"
+          cp -r "$WORKSPACE_ROOT/ytplaylist" "$WORKSPACE_ROOT/dist/linux/"
+          cp -r "$WORKSPACE_ROOT/config" "$WORKSPACE_ROOT/dist/linux/"
 
           mkdir -p "$WORKSPACE_ROOT/dist/linux/bin"
 
