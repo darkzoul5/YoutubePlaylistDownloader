@@ -1,29 +1,21 @@
 import logging
 from ytplaylist.manager import PlaylistManager
+from tests.temp_config import TempConfig
 
-class test:
-    playlists=[{"url": None, "save_path":"./tmp_test", "archive":"archive.txt"}]
-    yt_dlp_path="./bin/yt-dlp"
-    ffmpeg_path="./bin/ffmpeg"
-    aria2c_path="./bin/ aria2c"
-    max_parallel_downloads=2
-    aria2c_connections=2
-    download_mode = "audio"
-    max_video_quality = "1080p"
-    debug=False
-    non_interactive=False
-    prune=False
+
+class TestConfig(TempConfig):
+    playlists = [{"url": None, "save_path": "./tmp_test", "archive": "archive.txt"}]
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
     print('--- Running with prune=False ---')
-    cfg=test()
+    cfg=TestConfig()
     m=PlaylistManager(cfg, debug=False)
     m.run()
     print('Run complete prune=False')
 
     print('\n--- Running with prune=True, non_interactive=True ---')
-    cfg2=test()
+    cfg2=TestConfig()
     cfg2.prune=True
     cfg2.non_interactive=True
     m2=PlaylistManager(cfg2, debug=False)
