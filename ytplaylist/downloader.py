@@ -1,26 +1,28 @@
 import json
 import shutil
 import subprocess
+import logging
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-OK = "✔"
-FAIL = "✘"
-WARN = "⚠"
-STEP = "➜"
 
 
 class PlaylistDownloader:
     illegal_chars = '<>:"/\\|?*'
 
     def __init__(self, config, playlist: dict, index: int):
+        self.logger = logging.getLogger(__name__)
+        # allow caller to pass debug via playlist dict key or config extension later; default False
+        self.debug = bool(playlist.get("debug", False))
+
+        # If the manager (or config) defines debug, prefer that
+        if hasattr(config, "debug"):
+            self.debug = bool(config.debug)
+
         self.url = playlist.get("url")
         self.skip = False
         if not self.url:
-            print(
-                f"{FAIL} Playlist #{index + 1} has invalid or empty URL: '{self.url}' skipping"
-            )
+            self.logger.error("Playlist #%d has invalid or empty URL: '%s' skipping", index + 1, self.url)
             self.skip = True
         else:
             parsed = urlparse(self.url)
@@ -33,14 +35,10 @@ class PlaylistDownloader:
                     or parsed.netloc.endswith("youtu.be")
                     or parsed.path.startswith("/watch")
                 ):
-                    print(
-                        f"{WARN} URL for playlist #{index + 1} looks like a video URL, not a playlist: '{self.url}' — skipping"
-                    )
+                    self.logger.warning("URL for playlist #%d looks like a video URL, not a playlist: '%s' — skipping", index + 1, self.url)
                     self.skip = True
                 else:
-                    print(
-                        f"{WARN} URL for playlist #{index + 1} does not contain a playlist id: '{self.url}'. Attempting to fetch, but it may fail."
-                    )
+                    self.logger.warning("URL for playlist #%d does not contain a playlist id: '%s'. Attempting to fetch, but it may fail.", index + 1, self.url)
                     self.skip = False
 
         self.download_mode = playlist.get("download_mode", config.download_mode)
@@ -60,6 +58,14 @@ class PlaylistDownloader:
         self.max_parallel = config.max_parallel_downloads
         self.aria2c_connections = config.aria2c_connections
 
+    def _run(self, args, label=None):
+        """Run subprocess respecting debug mode. In non-debug mode, suppress stdout and capture stderr for logging."""
+        if self.debug:
+            # allow full binary output to the console
+            return subprocess.run(args, check=True)
+        # non-debug: hide stdout and capture stderr for better logging
+        return subprocess.run(args, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+
     def sanitize_title(self, title, fallback_id):
         safe_title = title.translate(str.maketrans({c: "-" for c in self.illegal_chars})).strip()
         return safe_title if safe_title else fallback_id
@@ -72,25 +78,20 @@ class PlaylistDownloader:
             return []
 
         try:
-            result = subprocess.run(
-                [self.yt_dlp, "-J", "--flat-playlist", self.url],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
+            result = subprocess.run([self.yt_dlp, "-J", "--flat-playlist", self.url], capture_output=True, text=True, check=True)
             data = json.loads(result.stdout)
             entries = data.get("entries", [])
         except subprocess.CalledProcessError as e:
             stderr = (e.stderr or "").lower()
             if any(k in stderr for k in ("private", "sign in", "login required", "403", "authorization failed")):
-                print(f"{WARN} Playlist appears to be private or requires authentication: '{self.url}'. Skipping.")
+                self.logger.warning("Playlist appears to be private or requires authentication: '%s'. Skipping.", self.url)
                 self.skip = True
                 return []
-            print(f"{FAIL} Failed to fetch playlist '{self.url}': {e.stderr.strip() if e.stderr else str(e)}")
+            self.logger.error("Failed to fetch playlist '%s': %s", self.url, (e.stderr.strip() if e.stderr else str(e)))
             self.skip = True
             return []
         except json.JSONDecodeError:
-            print(f"{FAIL} Failed to parse yt-dlp output for URL: '{self.url}'. Skipping.")
+            self.logger.error("Failed to parse yt-dlp output for URL: '%s'. Skipping.", self.url)
             self.skip = True
             return []
 
@@ -100,7 +101,7 @@ class PlaylistDownloader:
                 continue
             title = v.get("title", "")
             if title in ("[Deleted video]", "[Private video]"):
-                print(f"[SKIP] {v['id']} - {title}")
+                self.logger.info("[SKIP] %s - %s", v.get("id"), title)
                 continue
             valid.append(v)
         return valid
@@ -123,7 +124,7 @@ class PlaylistDownloader:
             mapping = {
                 "720p": "bestvideo[height<=720]+bestaudio/best[height<=720]",
                 "1080p": "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
-                "1440p": "bestvideo[height<=1440]+bestaudio+bestaudio/best[height<=1440]",
+                "1440p": "bestvideo[height<=1440]+bestaudio/best[height<=1440]",
                 "2160p": "bestvideo[height<=2160]+bestaudio/best[height<=2160]",
                 "best": "bestvideo+bestaudio/best",
             }
@@ -132,7 +133,7 @@ class PlaylistDownloader:
         cmds = []
 
         if self.download_mode == "audio":
-            output_path = (self.save_path / "audio" / f"{track_index:03d} - {safe_title}.mp3")
+            output_path = self.save_path / "audio" / f"{track_index:03d} - {safe_title}.mp3"
             output_path.parent.mkdir(parents=True, exist_ok=True)
             args = [
                 str(self.yt_dlp),
@@ -160,7 +161,7 @@ class PlaylistDownloader:
             cmds.append((args, f"{track_index:03d} - {title} (audio)"))
 
         elif self.download_mode == "video":
-            output_path = (self.save_path / "video" / f"{track_index:03d} - {safe_title}.mp4")
+            output_path = self.save_path / "video" / f"{track_index:03d} - {safe_title}.mp4"
             output_path.parent.mkdir(parents=True, exist_ok=True)
             fmt = build_video_format(self.max_video_quality)
             args = [
@@ -186,6 +187,7 @@ class PlaylistDownloader:
             cmds.append((args, f"{track_index:03d} - {title} (video)"))
 
         elif self.download_mode == "both":
+            # download video first
             video_folder = self.save_path / "video"
             video_folder.mkdir(parents=True, exist_ok=True)
             video_output = video_folder / f"{track_index:03d} - {safe_title}.mp4"
@@ -207,12 +209,13 @@ class PlaylistDownloader:
                 video_url,
             ]
             try:
-                subprocess.run(video_args, check=True)
+                self._run(video_args, label=f"{track_index:03d} - {title} (video)")
             except subprocess.CalledProcessError as e:
                 err = (e.stderr or "").strip()
-                print(f"{FAIL} Video download failed: {title} — {err}")
+                self.logger.error("Video download failed: %s — %s", title, err)
                 return False
 
+            # extract audio
             audio_folder = self.save_path / "audio"
             audio_folder.mkdir(parents=True, exist_ok=True)
             audio_output = audio_folder / f"{track_index:03d} - {safe_title}.mp3"
@@ -234,33 +237,34 @@ class PlaylistDownloader:
                     str(audio_output),
                 ]
                 try:
-                    subprocess.run(ffmpeg_cmd, check=True, capture_output=True, text=True)
+                    self._run(ffmpeg_cmd, label=f"extract audio {track_index:03d} - {title}")
                 except subprocess.CalledProcessError as e:
-                    print(f"{WARN} ffmpeg failed to extract audio for {title}: {(e.stderr or '').strip()}")
+                    self.logger.warning("ffmpeg failed to extract audio for %s: %s", title, (e.stderr or "").strip())
             else:
-                print(f"{WARN} ffmpeg not found; audio not extracted for {title}.")
+                self.logger.warning("ffmpeg not found; audio not extracted for %s.", title)
 
-            print(f"{OK} Downloaded video and extracted audio for: {track_index:03d} - {title}")
+            self.logger.info("Downloaded video and extracted audio for: %s - %s", f"{track_index:03d}", title)
             return True
 
         else:
-            print(f"{FAIL} Invalid download_mode '{self.download_mode}', skipping")
+            self.logger.error("Invalid download_mode '%s', skipping", self.download_mode)
             return False
 
+        # execute single or multiple commands
         success = True
         for args, label in cmds:
             try:
-                subprocess.run(args, check=True)
-                print(f"{OK} Downloaded: {label}")
+                self._run(args, label=label)
+                self.logger.info("Downloaded: %s", label)
             except subprocess.CalledProcessError as e:
                 err_msg = (e.stderr.strip().splitlines()[-1] if e.stderr else "Unknown error")
-                print(f"{FAIL} Download failed: {label} — {err_msg}")
+                self.logger.error("Download failed: %s — %s", label, err_msg)
                 success = False
 
         return success
 
     def renumber_all_tracks(self, playlist_entries):
-        print(f"\n{STEP} Renumbering files according to playlist order")
+        self.logger.info("Renumbering files according to playlist order")
         temp_suffix = ".renametemp"
 
         final_map_audio = {}
@@ -289,7 +293,7 @@ class PlaylistDownloader:
                 temp_match = list(folder.glob(f"*{ext}{temp_suffix}"))
                 for temp_path in temp_match:
                     final_path = folder / correct_fname
-                    print(f"Renaming '{temp_path.name}' → '{final_path.name}'")
+                    self.logger.info("Renaming '%s' → '%s'", temp_path.name, final_path.name)
                     temp_path.rename(final_path)
 
         if self.download_mode in ("audio", "both"):
@@ -297,37 +301,39 @@ class PlaylistDownloader:
         if self.download_mode in ("video", "both"):
             rename_files(self.save_path / "video", final_map_video, ".mp4")
 
-        print(f"{OK} Renumbering complete.")
+        self.logger.info("Renumbering complete.")
 
     def update(self):
         playlist_id = self.url or self.save_path or "unknown playlist"
         if getattr(self, "skip", False):
-            print(f"{WARN} Skipping playlist '{playlist_id}': URL missing in the config.")
+            self.logger.warning("Skipping playlist '%s': URL missing in the config.", playlist_id)
             return
 
-        print(f"{STEP} Updating playlist: {playlist_id}")
+        self.logger.info("Updating playlist: %s", playlist_id)
         playlist_entries = self.fetch_videos()
         archive_ids = self.get_archive_ids()
         new_videos = [v for v in playlist_entries if v["id"] not in archive_ids]
 
         if not new_videos:
-            print(f"{OK} No new items found.")
+            self.logger.info("No new items found.")
         else:
-            print(f"{OK} Found {len(new_videos)} new item(s) to download.")
+            self.logger.info("Found %d new item(s) to download.", len(new_videos))
+
             idx_map = {v["id"]: i + 1 for i, v in enumerate(playlist_entries)}
+
             with ThreadPoolExecutor(max_workers=self.max_parallel) as executor:
                 futures = [executor.submit(self.download_video, v, idx_map[v["id"]]) for v in new_videos]
                 for f in as_completed(futures):
                     try:
                         f.result()
                     except subprocess.CalledProcessError as e:
-                        print(f"{FAIL} Download failed: {e}")
+                        self.logger.error("Download failed: %s", e)
 
         self.renumber_all_tracks(playlist_entries)
         self.cleanup_removed_tracks(playlist_entries)
 
     def cleanup_removed_tracks(self, playlist_entries):
-        print(f"{STEP} Checking for files not in the playlist")
+        self.logger.info("Checking for files not in the playlist")
         valid_titles = set()
         for video in playlist_entries:
             title = video.get("title", "[Unknown]")
@@ -347,12 +353,12 @@ class PlaylistDownloader:
             if not to_delete:
                 return
 
-            print(f"{WARN} The following files in '{folder}' are not in the playlist and will be deleted:")
+            self.logger.warning("The following files in '%s' are not in the playlist and will be deleted:", folder)
             for f in to_delete:
-                print(f"  {f.name}")
+                self.logger.warning("  %s", f.name)
 
             try:
-                confirm = input(f"{WARN} Delete these files? [y/N]: ").strip().lower()
+                confirm = input("Delete these files? [y/N]: ").strip().lower()
             except EOFError:
                 confirm = "n"
 
@@ -360,12 +366,12 @@ class PlaylistDownloader:
                 for f in to_delete:
                     try:
                         f.unlink()
-                        print(f"{OK} Deleted: {f.name}")
+                        self.logger.info("Deleted: %s", f.name)
                     except Exception as ex:
-                        print(f"{FAIL} Failed to delete {f.name}: {ex}")
-                print(f"{OK} Cleanup complete in '{folder}'.")
+                        self.logger.error("Failed to delete %s: %s", f.name, ex)
+                self.logger.info("Cleanup complete in '%s'.", folder)
             else:
-                print(f"{OK} Cleanup aborted in '{folder}'. No files were deleted.")
+                self.logger.info("Cleanup aborted in '%s'. No files were deleted.", folder)
 
         if self.download_mode in ("audio", "both"):
             clean_folder(self.save_path / "audio", ".mp3")
