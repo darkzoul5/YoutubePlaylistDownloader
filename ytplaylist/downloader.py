@@ -18,6 +18,8 @@ class PlaylistDownloader:
         # If the manager (or config) defines debug, prefer that
         if hasattr(config, "debug"):
             self.debug = bool(config.debug)
+        # non-interactive mode for CI/automated runs
+        self.non_interactive = bool(getattr(config, "non_interactive", False))
 
         self.url = playlist.get("url")
         self.skip = False
@@ -358,7 +360,10 @@ class PlaylistDownloader:
                 self.logger.warning("  %s", f.name)
 
             try:
-                confirm = input("Delete these files? [y/N]: ").strip().lower()
+                if self.non_interactive:
+                    confirm = "y"
+                else:
+                    confirm = input("Delete these files? [y/N]: ").strip().lower()
             except EOFError:
                 confirm = "n"
 
