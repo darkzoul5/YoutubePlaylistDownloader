@@ -3,11 +3,13 @@ from ytplaylist.manager import PlaylistManager
 
 class test:
     playlists=[{"url": None, "save_path":"./tmp_test", "archive":"archive.txt"}]
-    yt_dlp_path="yt-dlp"
-    ffmpeg_path="ffmpeg"
-    aria2c_path="aria2c"
+    yt_dlp_path="./bin/yt-dlp"
+    ffmpeg_path="./bin/ffmpeg"
+    aria2c_path="./bin/ aria2c"
     max_parallel_downloads=2
     aria2c_connections=2
+    download_mode = "audio"
+    max_video_quality = "1080p"
     debug=False
     non_interactive=False
     prune=False
