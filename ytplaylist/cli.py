@@ -27,7 +27,8 @@ def main():
     parser = argparse.ArgumentParser(prog="yt-playlist")
     parser.add_argument("-c", "--config", default="yt-playlist-config.json", help="Path to config file")
     parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging and show binary output")
-    parser.add_argument("-y", "--yes", "--non-interactive", dest="yes", action="store_true", help="Run non-interactively (auto-confirm prompts)")
+    parser.add_argument("-p", "--prune", dest="prune", action="store_true", help="Enable pruning: delete files not present in the playlist")
+    parser.add_argument("-y", "--yes", "--non-interactive", dest="yes", action="store_true", help="Run non-interactively (auto-confirm prompts, used with --prune)")
     args = parser.parse_args()
 
     configure_logging(args.debug)
@@ -40,5 +41,6 @@ def main():
     manager = PlaylistManager(cfg, debug=args.debug)
     # support non-interactive mode for CI
     setattr(cfg, "non_interactive", bool(args.yes))
+    setattr(cfg, "prune", bool(args.prune))
     logger.debug("Starting PlaylistManager with debug=%s", args.debug)
     manager.run()

@@ -20,6 +20,8 @@ class PlaylistDownloader:
             self.debug = bool(config.debug)
         # non-interactive mode for CI/automated runs
         self.non_interactive = bool(getattr(config, "non_interactive", False))
+        # prune controls whether cleanup actually deletes files; default False
+        self.prune = bool(getattr(config, "prune", False))
 
         self.url = playlist.get("url")
         self.skip = False
@@ -358,6 +360,10 @@ class PlaylistDownloader:
             self.logger.warning("The following files in '%s' are not in the playlist and will be deleted:", folder)
             for f in to_delete:
                 self.logger.warning("  %s", f.name)
+
+            if not self.prune:
+                self.logger.info("Prune disabled; no files will be deleted in '%s'.", folder)
+                return
 
             try:
                 if self.non_interactive:
