@@ -13,6 +13,7 @@ if not os.getenv("INTEGRATION_TEST"):
     sys.exit(0)
 
 from ytplaylist.downloader import PlaylistDownloader
+from tests.temp_config import TempConfig
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 
@@ -20,16 +21,6 @@ playlist_url = os.getenv("TEST_PLAYLIST_URL")
 if not playlist_url:
     print("Please set TEST_PLAYLIST_URL to a public YouTube playlist URL for integration testing")
     sys.exit(1)
-
-# build a small temporary config-like object
-class TempConfig:
-    yt_dlp_path = os.getenv("YTDLP_PATH", "yt-dlp")
-    ffmpeg_path = os.getenv("FFMPEG_PATH", "ffmpeg")
-    aria2c_path = os.getenv("ARIA2C_PATH", "aria2c")
-    max_parallel_downloads = 2
-    aria2c_connections = 2
-    download_mode = "audio"
-    max_video_quality = "1080p"
 
 cfg = TempConfig()
 pl = {"url": playlist_url, "save_path": "./tmp_integration", "archive": "archive.txt"}
