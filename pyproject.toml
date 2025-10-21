@@ -12,7 +12,7 @@ license = { file = "LICENSE" }
 keywords = ["youtube", "yt-dlp", "playlist", "downloader"]
 
 [project.urls]
-"Home" = "https://example.org/"
+"Home" = "https://git.darkzoul.org/dark_zoul/youtube-playlist-downloader"
 
 [tool.setuptools.packages.find]
 where = ["."]
