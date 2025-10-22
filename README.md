@@ -171,7 +171,7 @@ docker compose up -d
 
 ## Docker Compose — environment variables
 
-You can pass environment variables. Below is a recommended example and a description of each variable.
+You can pass environment variables.
 
 Environment variables
 - `YTPL_DEBUG` (0/1): When set to `1` shows verbose output from external binaries (yt-dlp, ffmpeg, aria2c). Useful for diagnosing failures.
