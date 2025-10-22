@@ -108,14 +108,14 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
   - Offer to clean up files that are no longer in the playlist
 
 ---
- ## CLI flags (local / non-container usage)
+ ## CLI flags
 
 When running the script locally (for example `python yt-playlist-main.py`), you can pass the following flags:
 
 - `-c, --config <path>` — Path to a configuration file (relative to the repository `config/` directory by default)
 - `-d, --debug` — Show verbose subprocess output (yt-dlp, ffmpeg, aria2c)
-- `-p, --prune` — Enable pruning (deleting files not present in playlists)
-- `-y, --yes, --non-interactive` — Auto-confirm prompts (use with `--prune` in CI)
+- `-p, --prune` — Run with pruning (deleting files not present in playlists)
+- `-y, --yes, --non-interactive` — Auto-confirm prompts (used only with `--prune`at the moment)
 
 Examples (local):
 
@@ -128,7 +128,6 @@ python yt-playlist-main.py --prune --yes
 
 # Use a different config file
 python yt-playlist-main.py --config custom-config.json
-```
 ```
 ---
 
@@ -172,7 +171,7 @@ docker compose up -d
 
 ## Docker Compose — environment variables
 
-You can pass the same environment variables described below via `docker-compose.yml` using the `environment:` section. Below is a recommended example and a description of each variable.
+You can pass environment variables. Below is a recommended example and a description of each variable.
 
 Environment variables
 - `YTPL_DEBUG` (0/1): When set to `1` shows verbose output from external binaries (yt-dlp, ffmpeg, aria2c). Useful for diagnosing failures.
@@ -183,7 +182,7 @@ Environment variables
 - `YTPL_PLAYLISTS_JSON`: JSON array used to populate the `playlists` field in the config.
 - `PLAYLIST_{N}_{FIELD}`: Indexed playlist entries. For each playlist index N use `PLAYLIST_N_URL`, `PLAYLIST_N_DOWNLOAD_MODE`, `PLAYLIST_N_SAVE_PATH`, `PLAYLIST_N_ARCHIVE`, etc.
 - `YTPL_MAX_PARALLEL_DOWNLOADS`: Integer, maximum concurrent downloads.
-- `YTPL_ARIA2C_CONNECTIONS`: Integer, connections per aria2c download.
+- `YTPL_ARIA2C_CONNECTIONS`: Integer, connections per download.
 - `YTPL_MAX_VIDEO_QUALITY`: String, e.g., `1080p`, `720p`, `best`.
 - `YTPL_DOWNLOAD_MODE`: `audio`, `video`, or `both` — default download mode applied to playlists that don't set it individually.
 
