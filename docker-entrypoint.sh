@@ -28,10 +28,9 @@ fi
 # 1) YTPL_CONFIG_JSON -> full JSON payload for the entire config
 # 2) YTPL_PLAYLISTS_JSON -> JSON array assigned to 'playlists' key in the base config
 # 3) PLAYLIST_{N}_{FIELD} env vars, e.g. PLAYLIST_0_URL, PLAYLIST_0_DOWNLOAD_MODE, etc.
-# Top-level overrides (optional): YTPL_YT_DLP_PATH, YTPL_FFMPEG_PATH, YTPL_ARIA2C_PATH,
-# YTPL_MAX_PARALLEL_DOWNLOADS, YTPL_ARIAC2_CONNECTIONS, YTPL_MAX_VIDEO_QUALITY, YTPL_DOWNLOAD_MODE
+# Top-level overrides (optional): YTPL_MAX_PARALLEL_DOWNLOADS, YTPL_ARIA2C_CONNECTIONS, YTPL_MAX_VIDEO_QUALITY, YTPL_DOWNLOAD_MODE
 
-if [ -n "${YTPL_CONFIG_JSON:-}" ] || [ -n "${YTPL_PLAYLISTS_JSON:-}" ] || env | grep -q '^PLAYLIST_' || [ -n "${YTPL_YT_DLP_PATH:-}" ] || [ -n "${YTPL_FFMPEG_PATH:-}" ] || [ -n "${YTPL_ARIA2C_PATH:-}" ]; then
+if [ -n "${YTPL_CONFIG_JSON:-}" ] || [ -n "${YTPL_PLAYLISTS_JSON:-}" ] || env | grep -q '^PLAYLIST_' ; then
   python - <<'PY'
 import os, json, sys
 from pathlib import Path
@@ -113,9 +112,6 @@ if playlists:
 
 # Top-level overrides
 overrides = {
-  'yt_dlp_path': 'YTPL_YT_DLP_PATH',
-  'ffmpeg_path': 'YTPL_FFMPEG_PATH',
-  'aria2c_path': 'YTPL_ARIA2C_PATH',
   'max_parallel_downloads': 'YTPL_MAX_PARALLEL_DOWNLOADS',
   'aria2c_connections': 'YTPL_ARIA2C_CONNECTIONS',
   'max_video_quality': 'YTPL_MAX_VIDEO_QUALITY',

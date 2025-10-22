@@ -108,7 +108,30 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
   - Offer to clean up files that are no longer in the playlist
 
 ---
- 
+ ## CLI flags (local / non-container usage)
+
+When running the script locally (for example `python yt-playlist-main.py`), you can pass the following flags:
+
+- `-c, --config <path>` — Path to a configuration file (relative to the repository `config/` directory by default)
+- `-d, --debug` — Show verbose subprocess output (yt-dlp, ffmpeg, aria2c)
+- `-p, --prune` — Enable pruning (deleting files not present in playlists)
+- `-y, --yes, --non-interactive` — Auto-confirm prompts (use with `--prune` in CI)
+
+Examples (local):
+
+```powershell
+# Run with debug output
+python yt-playlist-main.py --debug
+
+# Run non-interactive and prune
+python yt-playlist-main.py --prune --yes
+
+# Use a different config file
+python yt-playlist-main.py --config custom-config.json
+```
+```
+---
+
 ## Docker Usage
 
 You can run YouTube Playlist Downloader using the official Docker image.
@@ -116,7 +139,7 @@ You can run YouTube Playlist Downloader using the official Docker image.
 ### Run the container
 
 ```pwsh
-docker run -v /path/to/downloads:/app/downloads -v /path/to/config:/app/config git.darkzoul.org/dark_zoul/youtube-playlist-downloader:latest
+docker run --rm -v /path/to/downloads:/app/downloads -v /path/to/config:/app/config git.darkzoul.org/dark_zoul/youtube-playlist-downloader:latest
 ```
 
 Replace `/path/to/downloads` and `/path/to/config` with your local directories.
@@ -146,6 +169,27 @@ Run it with:
 ```pwsh
 docker compose up -d
 ```
+
+## Docker Compose — environment variables
+
+You can pass the same environment variables described below via `docker-compose.yml` using the `environment:` section. Below is a recommended example and a description of each variable.
+
+Environment variables
+- `YTPL_DEBUG` (0/1): When set to `1` shows verbose output from external binaries (yt-dlp, ffmpeg, aria2c). Useful for diagnosing failures.
+- `YTPL_PRUNE` (0/1): When set to `1` enables pruning — files that are not present in any configured playlist will be deleted (requires confirmation unless `YTPL_YES` is set).
+- `YTPL_YES` (0/1): Auto-confirm prompts (use with `YTPL_PRUNE` in automated runs).
+- `YTPL_CONFIG`: Path to a config file inside the container (defaults to `/app/config/yt-playlist-config.json` if present).
+- `YTPL_CONFIG_JSON`: Full JSON payload for the entire config. When provided it overwrites `/app/config/yt-playlist-config.json`.
+- `YTPL_PLAYLISTS_JSON`: JSON array used to populate the `playlists` field in the config.
+- `PLAYLIST_{N}_{FIELD}`: Indexed playlist entries. For each playlist index N use `PLAYLIST_N_URL`, `PLAYLIST_N_DOWNLOAD_MODE`, `PLAYLIST_N_SAVE_PATH`, `PLAYLIST_N_ARCHIVE`, etc.
+- `YTPL_MAX_PARALLEL_DOWNLOADS`: Integer, maximum concurrent downloads.
+- `YTPL_ARIA2C_CONNECTIONS`: Integer, connections per aria2c download.
+- `YTPL_MAX_VIDEO_QUALITY`: String, e.g., `1080p`, `720p`, `best`.
+- `YTPL_DOWNLOAD_MODE`: `audio`, `video`, or `both` — default download mode applied to playlists that don't set it individually.
+
+Tip
+- Mount a config file for complex setups to avoid long environment variables. Example: `- /host/config/yt-playlist-config.json:/app/config/yt-playlist-config.json`.
+
 
 ## Troubleshooting
 
