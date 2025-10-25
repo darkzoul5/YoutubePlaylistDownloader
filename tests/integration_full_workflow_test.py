@@ -14,6 +14,16 @@ from pathlib import Path
 import time
 import shutil
 
+# Make imports robust when running the script directly from different working directories.
+# Ensure the repository root and this tests folder are on sys.path so the script can import
+# both the package (`ytplaylist`) and local test helpers (`tests.temp_config`).
+REPO_ROOT = Path(__file__).resolve().parents[1]
+TESTS_DIR = Path(__file__).resolve().parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+if str(TESTS_DIR) not in sys.path:
+    sys.path.insert(0, str(TESTS_DIR))
+
 if not os.getenv("INTEGRATION_TEST"):
     print("Skipping full integration test (set INTEGRATION_TEST=1 to enable)")
     sys.exit(0)
