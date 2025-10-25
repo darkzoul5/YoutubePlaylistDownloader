@@ -20,11 +20,46 @@ jobs:
       - name: Checkout repository
         uses: https://gitea.com/actions/checkout@v5
 
-      - name: Install system packages (Python, ffmpeg, aria2, yt-dlp)
+      - name: Install system packages (Python, jq)
         run: |
           sudo apt-get update -y
           # ensure venv support is available so we can create an isolated environment
-          sudo apt-get install -y python3 python3-pip python3-venv ffmpeg aria2 yt-dlp
+          # jq is used to parse the release JSON when fetching assets from the repo
+          sudo apt-get install -y python3 python3-pip python3-venv jq curl
+
+      - name: Download latest release binaries from your repo (git.darkzoul.org)
+        run: |
+          set -euo pipefail
+          # Use the provided releases URL host and owner/repo
+          GITEA_API_URL="https://git.darkzoul.org/api/v1/repos/dark_zoul/youtube-playlist-downloader/releases/latest"
+          echo "Fetching release info from: $GITEA_API_URL"
+
+          RELEASE_JSON=$(curl -sSL "$GITEA_API_URL" || true)
+
+          download_asset() {
+            local pattern="$1"
+            url=$(echo "$RELEASE_JSON" | jq -r --arg pat "$pattern" '.assets[] | select(.name | test($pat; "i")) | (.browser_download_url // .download_url) ' | head -n1 || true)
+            if [[ -n "$url" && "$url" != "null" ]]; then
+              echo "Downloading asset matching '$pattern' -> $url"
+              sudo curl -L --fail -o "/usr/local/bin/$(basename $url)" "$url"
+              sudo chmod +x "/usr/local/bin/$(basename $url)"
+              return 0
+            fi
+            return 1
+          }
+
+          fetched_any=0
+          if download_asset "yt-?dl" ; then fetched_any=1; fi
+          if download_asset "aria2" ; then fetched_any=1; fi
+          if download_asset "ffmpeg" ; then fetched_any=1; fi
+
+          if [[ $fetched_any -eq 0 ]]; then
+            echo "No matching release assets found for yt-dlp/aria2/ffmpeg on git.darkzoul.org; falling back to apt packages"
+            sudo apt-get install -y ffmpeg aria2 yt-dlp
+          else
+            echo "Installed binaries from latest release into /usr/local/bin"
+            ls -l /usr/local/bin/yt* /usr/local/bin/aria* /usr/local/bin/ffm* || true
+          fi
 
       - name: Install project into virtual environment
         run: |
