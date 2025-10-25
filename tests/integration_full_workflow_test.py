@@ -77,7 +77,8 @@ failed = False
 for mode in MODES:
     print(f"\n=== Running mode: {mode} ===")
     cfg = TempConfig()
-    cfg.debug = False
+    # Allow enabling verbose subprocess output from CI by setting YTPL_DEBUG=1
+    cfg.debug = bool(os.getenv("YTPL_DEBUG", "0") == "1")
     cfg.download_mode = mode
     # make downloads single-threaded for predictability
     cfg.max_parallel_downloads = 1
@@ -94,6 +95,13 @@ for mode in MODES:
     playlist = {"url": playlist_url, "save_path": str(save_path), "archive": f"archive_{mode}.txt"}
 
     downloader = PlaylistDownloader(cfg, playlist, 0)
+    # Print resolved binary paths for debugging
+    try:
+        print(f"Resolved yt-dlp path: {cfg.yt_dlp_path}")
+        print(f"Resolved ffmpeg path: {cfg.ffmpeg_path}")
+        print(f"Resolved aria2c path: {cfg.aria2c_path}")
+    except Exception:
+        pass
 
     try:
         start = time.time()

@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: https://gitea.com/actions/checkout@v5
+        uses: "https://gitea.com/actions/checkout@v5"
 
       - name: Make bundled linux binaries executable (if present)
         run: |
@@ -36,8 +36,10 @@ jobs:
           python -m pip install -e .[test] || python -m pip install -e .
           python -m pip install pytest
 
-      - name: Run integration test
+      - name: Run integration script directly
+        env:
+          YTPL_DEBUG: '1'
         run: |
           set -euo pipefail
           . .venv/bin/activate
-          python -m pytest -q tests/integration_full_workflow_test.py
+          python tests/integration_full_workflow_test.py
