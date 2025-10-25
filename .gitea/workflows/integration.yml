@@ -27,7 +27,7 @@ jobs:
           # jq is used to parse the release JSON when fetching assets from the repo
           sudo apt-get install -y python3 python3-pip python3-venv jq curl
 
-      - name: Download latest release binaries from your repo (git.darkzoul.org)
+      - name: Download latest release binaries from repo
         run: |
           set -euo pipefail
           # Use the provided releases URL host and owner/repo
