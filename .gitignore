@@ -3,7 +3,6 @@
 
 #Custom for this project
 config/yt-playlist-config.json
-/bin/
 /tmp*
 # Byte-compiled / optimized / DLL files
 __pycache__/
