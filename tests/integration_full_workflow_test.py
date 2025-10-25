@@ -28,6 +28,24 @@ if not os.getenv("INTEGRATION_TEST"):
     print("Skipping full integration test (set INTEGRATION_TEST=1 to enable)")
     sys.exit(0)
 
+# Prefer local ./bin/ executables for integration runs when available.
+# Set environment variables before importing TempConfig so its class attributes
+# pick up these overridden paths.
+bin_dir = REPO_ROOT / "bin"
+if bin_dir.exists():
+    ytdlp_path = bin_dir / "yt-dlp"
+    if ytdlp_path.exists():
+        os.environ.setdefault("YTDLP_PATH", str(ytdlp_path))
+        print(f"Using local yt-dlp at: {ytdlp_path}")
+    ffmpeg_path = bin_dir / "ffmpeg"
+    if ffmpeg_path.exists():
+        os.environ.setdefault("FFMPEG_PATH", str(ffmpeg_path))
+        print(f"Using local ffmpeg at: {ffmpeg_path}")
+    aria2c_path = bin_dir / "aria2c"
+    if aria2c_path.exists():
+        os.environ.setdefault("ARIA2C_PATH", str(aria2c_path))
+        print(f"Using local aria2c at: {aria2c_path}")
+
 from ytplaylist.downloader import PlaylistDownloader
 from tests.temp_config import TempConfig
 
