@@ -18,6 +18,14 @@ jobs:
       - name: Checkout repository
         uses: https://gitea.com/actions/checkout@v5
 
+      - name: Make bundled linux binaries executable (if present)
+        run: |
+          set -euo pipefail
+          if [ -d ./bin/linux ]; then
+            chmod +x ./bin/linux/* || true
+            ls -l ./bin/linux || true
+          fi
+
       - name: Create venv and install project
         run: |
           set -euo pipefail
