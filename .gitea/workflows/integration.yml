@@ -20,24 +20,13 @@ jobs:
       - name: Checkout repository
         uses: https://gitea.com/actions/checkout@v5
 
-      - name: Install system packages (Python, ffmpeg, aria2)
+      - name: Install system packages (Python, ffmpeg, aria2, yt-dlp)
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y python3 python3-pip ffmpeg aria2
-
-      - name: Install yt-dlp
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install yt-dlp
+          sudo apt-get install -y python3 python3-pip ffmpeg aria2 yt-dlp
 
       - name: Install project
         run: python3 -m pip install -e .
 
-      - name: Run integration test (gated)
-        # The integration test performs real downloads; gate it behind a repository secret.
-        if: ${{ secrets.RUN_INTEGRATION_TESTS == 'true' }}
+      - name: Run integration test
         run: python3 tests/integration_full_workflow_test.py
-
-      - name: Skip integration test (not enabled)
-        if: ${{ secrets.RUN_INTEGRATION_TESTS != 'true' }}
-        run: echo "Integration tests are skipped. To enable set the repository secret RUN_INTEGRATION_TESTS = 'true'."
