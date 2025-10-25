@@ -31,7 +31,7 @@ if not os.getenv("INTEGRATION_TEST"):
 # Prefer local ./bin/ executables for integration runs when available.
 # Set environment variables before importing TempConfig so its class attributes
 # pick up these overridden paths.
-bin_dir = REPO_ROOT / "bin"
+bin_dir = REPO_ROOT / "bin" / "linux"
 if bin_dir.exists():
     ytdlp_path = bin_dir / "yt-dlp"
     if ytdlp_path.exists():

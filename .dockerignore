@@ -1,6 +1,6 @@
 .gitea/
 .venv/
-
+./bin/
 # Python bytecode
 __pycache__/
 *.py[cod]
