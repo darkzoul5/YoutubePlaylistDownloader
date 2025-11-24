@@ -1,7 +1,7 @@
 import os
 
 
-class TempConfig:
+class DummyConfig:
     """Small test configuration object used by unit and integration tests.
 
     Adjust attributes via environment variables where appropriate.

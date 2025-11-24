@@ -47,7 +47,7 @@ if bin_dir.exists():
         print(f"Using local aria2c at: {aria2c_path}")
 
 from ytplaylist.downloader import PlaylistDownloader
-from tests.temp_config import TempConfig
+from tests.dummy_config import DummyConfig
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 
@@ -60,7 +60,7 @@ if not playlist_url:
 
 print(f"Using playlist URL: {playlist_url}")
 
-cfg_base = TempConfig()
+cfg_base = DummyConfig()
 
 # ensure yt-dlp exists
 import shutil as _sh
@@ -76,7 +76,7 @@ root_tmp.mkdir(parents=True, exist_ok=True)
 failed = False
 for mode in MODES:
     print(f"\n=== Running mode: {mode} ===")
-    cfg = TempConfig()
+    cfg = DummyConfig()
     # Allow enabling verbose subprocess output from CI by setting YTPL_DEBUG=1
     cfg.debug = bool(os.getenv("YTPL_DEBUG", "0") == "1")
     cfg.download_mode = mode
