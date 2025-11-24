@@ -24,8 +24,8 @@ def test_download_video_both_mode_ffmpeg_missing(monkeypatch, tmp_path, caplog):
     video = {"id": "X1", "title": "Test"}
 
     # monkeypatch _run to simulate successful video download and ffmpeg extraction failure path
-    def fake_run(args, check=True, stdout=None, stderr=None, text=None):
-        # simulate successful yt-dlp or ffmpeg calls by returning a simple object
+    def fake_run(*args, **kwargs):
+        # accept label or other kwargs; simulate successful call
         return subprocess.CompletedProcess(args, 0)
 
     monkeypatch.setattr(PlaylistDownloader, "_run", fake_run)

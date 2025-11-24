@@ -36,7 +36,10 @@ def test_update_yt_dlp_failure(monkeypatch, caplog):
 
 def test_configure_logging_sets_levels():
     # ensure calling configure_logging flips global root logger level
+    # clear existing handlers so basicConfig can take effect in test
+    logging.root.handlers.clear()
     cli_mod.configure_logging(True)
-    assert logging.getLogger().level == logging.DEBUG
+    assert logging.getLogger().getEffectiveLevel() == logging.DEBUG
+    logging.root.handlers.clear()
     cli_mod.configure_logging(False)
-    assert logging.getLogger().level == logging.INFO
+    assert logging.getLogger().getEffectiveLevel() == logging.INFO
