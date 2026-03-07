@@ -243,17 +243,22 @@ jobs:
       IMAGE_NAME: youtubeplaylistdownloader
     steps:
       - uses: actions/download-artifact@v4
-        with: 
+        with:
           name: windows-zip
+          path: windows-zip
       - uses: actions/download-artifact@v4
-        with: 
+        with:
           name: linux-zip
+          path: linux-zip
       - uses: actions/download-artifact@v4
-        with: 
+        with:
           name: docker-image
+          path: docker-image
       - uses: actions/download-artifact@v4
-        with: 
+        with:
           name: docker-image-latest
+          path: docker-image-latest
+
       - name: Get version from tag
         id: version
         shell: bash
