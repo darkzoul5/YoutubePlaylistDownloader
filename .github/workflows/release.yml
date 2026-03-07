@@ -63,11 +63,6 @@ jobs:
           # Remove temp files before zipping
           rm -rf "$GITHUB_WORKSPACE/dist/windows/ffmpeg_temp" "$GITHUB_WORKSPACE/dist/windows/aria2-1.37.0-win-64bit-build1" "$GITHUB_WORKSPACE/dist/windows/ffmpeg.zip" "$GITHUB_WORKSPACE/dist/windows/aria2c.zip"
 
-          cd "$GITHUB_WORKSPACE/dist/windows"
-          ZIP_NAME="yt-playlist-windows-${TAG}.zip"
-          zip -r "$GITHUB_WORKSPACE/$ZIP_NAME" *
-          echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
-
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
