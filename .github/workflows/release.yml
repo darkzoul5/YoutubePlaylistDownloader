@@ -166,7 +166,7 @@ jobs:
       - name: Extract linux-zip artifact
         run: |
           set -e
-          tar -xzf yt-playlist-linux-${TAG}.tar.gz
+          tar -xzf linux-zip/yt-playlist-linux-${TAG}.tar.gz
 
       - name: Build Docker image with release tag
         run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
@@ -245,7 +245,7 @@ jobs:
           draft: true
 
       - name: Upload Windows release asset
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v2
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: windows-zip/yt-playlist-windows-${{ env.TAG }}.zip
@@ -253,7 +253,7 @@ jobs:
           asset_content_type: application/zip
 
       - name: Upload Linux release asset
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v2
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: linux-zip/yt-playlist-linux-${{ env.TAG }}.tar.gz
@@ -261,7 +261,7 @@ jobs:
           asset_content_type: application/gzip
 
       - name: Upload Docker image (release tag)
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v2
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: docker-image/docker-image.tar
@@ -269,7 +269,7 @@ jobs:
           asset_content_type: application/x-tar
 
       - name: Upload Docker image (latest)
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v2
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: docker-image-latest/docker-image-latest.tar
