@@ -23,21 +23,24 @@ jobs:
           sudo apt update
           sudo apt install -y unzip zip curl
 
-      - name: Extract ref name
+      - name: Get version from tag
+        id: version
+        shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            REF_NAME="${GITHUB_REF#refs/tags/}"
-          elif [[ "$GITHUB_REF" == refs/heads/* ]]; then
-            REF_NAME="${GITHUB_REF#refs/heads/}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.tag }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
           else
-            REF_NAME="unknown"
+            VERSION="${{ github.ref_name }}"
           fi
-          echo "TAG=$REF_NAME" >> $GITHUB_ENV
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Prepare Windows package
         run: |
           set -e
-          
+          VERSION="${{ steps.version.outputs.version }}"
           mkdir -p "$GITHUB_WORKSPACE/dist/windows"
           cp "$GITHUB_WORKSPACE/yt-playlist-main.py" "$GITHUB_WORKSPACE/dist/windows/"
 
@@ -70,7 +73,7 @@ jobs:
 
           # Create windows archive
           cd "$GITHUB_WORKSPACE/dist/windows"
-          ZIP_NAME="yt-playlist-windows-${TAG}.zip"
+          ZIP_NAME="yt-playlist-windows-${VERSION}.zip"
           zip -r "$GITHUB_WORKSPACE/$ZIP_NAME" *
           echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
 
@@ -94,22 +97,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Get version from tag
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.tag }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y unzip zip curl wget build-essential \
           pkg-config libssl-dev zlib1g-dev
 
-      - name: Extract ref name
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            REF_NAME="${GITHUB_REF#refs/tags/}"
-          elif [[ "$GITHUB_REF" == refs/heads/* ]]; then
-            REF_NAME="${GITHUB_REF#refs/heads/}"
-          else
-            REF_NAME="unknown"
-          fi
-          echo "TAG=$REF_NAME" >> $GITHUB_ENV
+      
 
       - name: Prepare workspace
         run: |
@@ -176,8 +184,9 @@ jobs:
       - name: Archive Linux package
         run: |
           set -e
+          VERSION="${{ steps.version.outputs.version }}"
           cd "$GITHUB_WORKSPACE/dist/linux"
-          ZIP_NAME="yt-playlist-linux-${TAG}.tar.gz"
+          ZIP_NAME="yt-playlist-linux-${VERSION}.tar.gz"
           tar -czf "$GITHUB_WORKSPACE/$ZIP_NAME" *
 
       - name: Upload Linux artifact
@@ -196,17 +205,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Extract ref name
+      - name: Get version from tag
+        id: version
+        shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            REF_NAME="${GITHUB_REF#refs/tags/}"
-          elif [[ "$GITHUB_REF" == refs/heads/* ]]; then
-            REF_NAME="${GITHUB_REF#refs/heads/}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.tag }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
           else
-            REF_NAME="unknown"
+            VERSION="${{ github.ref_name }}"
           fi
-          echo "TAG=$REF_NAME" >> $GITHUB_ENV
-      
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Download linux-zip artifact 
         uses: actions/download-artifact@v4
         with:
@@ -218,13 +230,13 @@ jobs:
           tar -xzf linux-zip/yt-playlist-linux-*.tar.gz -C .
 
       - name: Build Docker image with release tag
-        run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+        run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
 
-      - name: Save Docker image ${TAG} as tar
+      - name: Save Docker image as tar
         run: |
-          docker save -o docker-image.tar ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          docker save -o docker-image.tar ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
 
-      - name: Upload docker-image-${TAG} artifact
+      - name: Upload docker-image artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-image
@@ -254,16 +266,19 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
-      - name: Extract ref name
+      - name: Get version from tag
+        id: version
+        shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            REF_NAME="${GITHUB_REF#refs/tags/}"
-          elif [[ "$GITHUB_REF" == refs/heads/* ]]; then
-            REF_NAME="${GITHUB_REF#refs/heads/}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.tag }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
           else
-            REF_NAME="unknown"
+            VERSION="${{ github.ref_name }}"
           fi
-          echo "TAG=$REF_NAME" >> $GITHUB_ENV
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Login to the Container registry
         uses: docker/login-action@v3
@@ -278,7 +293,7 @@ jobs:
           docker load -i docker-image/docker-image.tar
 
       - name: Push Docker image with release tag
-        run: docker push ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+        run: docker push ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
 
       - name: Load docker image from tar
         run: |
@@ -294,24 +309,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.TAG }}
-          release_name: ${{ env.TAG }}
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: ${{ steps.version.outputs.version }}
           draft: true
 
       - name: Upload Windows release asset
         uses: actions/upload-release-asset@v2
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: windows-zip/yt-playlist-windows-${{ env.TAG }}.zip
-          asset_name: yt-playlist-windows-${{ env.TAG }}.zip
+          asset_path: windows-zip/yt-playlist-windows-${{ steps.version.outputs.version }}.zip
+          asset_name: yt-playlist-windows-${{ steps.version.outputs.version }}.zip
           asset_content_type: application/zip
 
       - name: Upload Linux release asset
         uses: actions/upload-release-asset@v2
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: linux-zip/yt-playlist-linux-${{ env.TAG }}.tar.gz
-          asset_name: yt-playlist-linux-${{ env.TAG }}.tar.gz
+          asset_path: linux-zip/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
+          asset_name: yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
           asset_content_type: application/gzip
 
       - name: Upload Docker image (release tag)
@@ -319,7 +334,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: docker-image/docker-image.tar
-          asset_name: docker-image-${{ env.TAG }}.tar
+          asset_name: docker-image-${{ steps.version.outputs.version }}.tar
           asset_content_type: application/x-tar
 
       - name: Upload Docker image (latest)
