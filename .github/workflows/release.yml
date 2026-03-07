@@ -184,16 +184,18 @@ jobs:
           echo "RELEASE_IMAGE=ghcr.io/${GITHUB_ACTOR}/youtubeplaylistdownloader:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
           echo "LATEST_IMAGE=ghcr.io/${GITHUB_ACTOR}/youtubeplaylistdownloader:latest" >> $GITHUB_ENV
 
-      - name: Download linux-zip artifact 
+      - name: Download linux artifact
         uses: actions/download-artifact@v4
         with:
           name: linux-zip
 
       - name: Extract linux artifact
-        run: tar -xzf linux-zip/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz -C .
+        run: |
+          mkdir -p dist/linux
+          tar -xzf linux-zip/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz -C dist/linux
 
       - name: Build Docker image (release)
-        run: docker build ./ -t $RELEASE_IMAGE
+        run: docker build dist/linux -t $RELEASE_IMAGE
 
       - name: Save Docker image as tar
         run: docker save -o docker-image.tar $RELEASE_IMAGE
@@ -205,7 +207,7 @@ jobs:
           path: docker-image.tar
 
       - name: Build Docker image (latest)
-        run: docker build ./ --label build_as_latest=true -t $LATEST_IMAGE
+        run: docker build dist/linux --label build_as_latest=true -t $LATEST_IMAGE
 
       - name: Save Docker image as tar (latest)
         run: docker save -o docker-image-latest.tar $LATEST_IMAGE
