@@ -11,7 +11,7 @@ on:
 permissions:
   contents: write
   packages: write
-  
+
 jobs:
   build-windows-package:
     runs-on: ubuntu-latest
@@ -72,7 +72,7 @@ jobs:
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-zip
+          name: windows-release
           path: ${{ github.workspace }}/yt-playlist-windows-*.zip
 
   build-linux-package:
@@ -174,7 +174,7 @@ jobs:
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-zip
+          name: linux-release
           path: ${{ github.workspace }}/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
 
   build-docker-image:
@@ -205,7 +205,7 @@ jobs:
       - name: Download linux artifact
         uses: actions/download-artifact@v4
         with:
-          name: linux-zip
+          name: linux-release
 
       - name: Prepare Docker build context
         run: |
@@ -248,12 +248,12 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: windows-zip
-          path: windows-zip
+          name: windows-release
+          path: windows-release
       - uses: actions/download-artifact@v4
         with:
-          name: linux-zip
-          path: linux-zip
+          name: linux-release
+          path: linux-release
       - uses: actions/download-artifact@v4
         with:
           name: docker-image
@@ -307,14 +307,14 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: windows-zip/yt-playlist-windows-${{ steps.version.outputs.version }}.zip
+          asset_path: windows-release/yt-playlist-windows-${{ steps.version.outputs.version }}.zip
           asset_name: yt-playlist-windows-${{ steps.version.outputs.version }}.zip
           asset_content_type: application/zip
       - name: Upload Linux release asset
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: linux-zip/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
+          asset_path: linux-release/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
           asset_name: yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
           asset_content_type: application/gzip
       - name: Upload Docker release tar
