@@ -296,28 +296,28 @@ jobs:
           release_name: ${{ steps.version.outputs.version }}
           draft: true
       - name: Upload Windows release asset
-        uses: actions/upload-release-asset@v2
+        uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: windows-zip/yt-playlist-windows-${{ steps.version.outputs.version }}.zip
           asset_name: yt-playlist-windows-${{ steps.version.outputs.version }}.zip
           asset_content_type: application/zip
       - name: Upload Linux release asset
-        uses: actions/upload-release-asset@v2
+        uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: linux-zip/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
           asset_name: yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
           asset_content_type: application/gzip
       - name: Upload Docker release tar
-        uses: actions/upload-release-asset@v2
+        uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: docker-image/docker-image.tar
           asset_name: docker-image-${{ steps.version.outputs.version }}.tar
           asset_content_type: application/x-tar
       - name: Upload Docker latest tar
-        uses: actions/upload-release-asset@v2
+        uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: docker-image-latest/docker-image-latest.tar
