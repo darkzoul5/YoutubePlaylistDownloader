@@ -189,10 +189,31 @@ jobs:
         with:
           name: linux-zip
 
+      - name: Debug artifact contents
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Listing top-level files:"
+          ls -lh
+          echo "Listing linux-zip directory contents:"
+          ls -lh linux-zip || echo "linux-zip does not exist"
+          echo "Tree of linux-zip (if installed):"
+          if command -v tree &> /dev/null; then
+            tree linux-zip || echo "linux-zip tree failed"
+          fi
+
       - name: Extract linux artifact
         run: |
           mkdir -p dist/linux
-          tar -xzf linux-zip/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz -C dist/linux
+          tar -xzf linux-zip/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz -C dist/linux || \
+          (echo "Extraction failed"; ls -lh linux-zip; exit 1)
+
+      - name: Debug dist/linux
+        run: |
+          echo "Listing dist/linux after extraction:"
+          ls -lh dist/linux
+          if command -v tree &> /dev/null; then
+            tree dist/linux
+          fi
 
       - name: Build Docker image (release)
         run: docker build dist/linux -t $RELEASE_IMAGE
