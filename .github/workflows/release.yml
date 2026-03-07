@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-zip
-          path: ${{ env.ZIP_PATH }}
+          path: $GITHUB_WORKSPACE/yt-playlist-windows-*.zip
 
 
 
@@ -174,13 +174,12 @@ jobs:
           cd "$GITHUB_WORKSPACE/dist/linux"
           ZIP_NAME="yt-playlist-linux-${TAG}.tar.gz"
           tar -czf "$GITHUB_WORKSPACE/$ZIP_NAME" *
-          echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-zip
-          path: ${{ env.ZIP_PATH }}
+          path: $GITHUB_WORKSPACE/yt-playlist-linux-*.tar.gz
 
   build-docker-image:
     runs-on: ubuntu-latest
@@ -211,7 +210,7 @@ jobs:
       - name: Extract linux artifact
         run: |
           set -e
-          tar -xzf linux-zip/yt-playlist-linux-${TAG}.tar.gz -C .
+          tar -xzf linux-zip/yt-playlist-linux-*.tar.gz -C .
 
       - name: Build Docker image with release tag
         run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
