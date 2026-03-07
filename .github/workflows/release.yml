@@ -27,32 +27,32 @@ jobs:
       - name: Prepare Windows package
         run: |
           set -e
-          WORKSPACE_ROOT="${GITHUB_WORKSPACE:-$PWD}"
-          mkdir -p "$WORKSPACE_ROOT/dist/windows"
-          cp "$WORKSPACE_ROOT/yt-playlist-main.py" "$WORKSPACE_ROOT/dist/windows/"
+          
+          mkdir -p "$GITHUB_WORKSPACE/dist/windows"
+          cp "$GITHUB_WORKSPACE/yt-playlist-main.py" "$GITHUB_WORKSPACE/dist/windows/"
 
-          mkdir -p "$WORKSPACE_ROOT/dist/windows/bin"
+          mkdir -p "$GITHUB_WORKSPACE/dist/windows/bin"
 
           # yt-dlp
-          curl -fL -o "$WORKSPACE_ROOT/dist/windows/bin/yt-dlp.exe" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+          curl -fL -o "$GITHUB_WORKSPACE/dist/windows/bin/yt-dlp.exe" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
 
           # FFmpeg Windows static
-          curl -fL -o "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
-          unzip -q "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" -d "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp"
-          mv $(find "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp" -name ffmpeg.exe | head -n 1) "$WORKSPACE_ROOT/dist/windows/bin/ffmpeg.exe"
+          curl -fL -o "$GITHUB_WORKSPACE/dist/windows/ffmpeg.zip" https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+          unzip -q "$GITHUB_WORKSPACE/dist/windows/ffmpeg.zip" -d "$GITHUB_WORKSPACE/dist/windows/ffmpeg_temp"
+          mv $(find "$GITHUB_WORKSPACE/dist/windows/ffmpeg_temp" -name ffmpeg.exe | head -n 1) "$GITHUB_WORKSPACE/dist/windows/bin/ffmpeg.exe"
 
           # aria2c Windows static
-          curl -fL -o "$WORKSPACE_ROOT/dist/windows/aria2c.zip" https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
-          unzip "$WORKSPACE_ROOT/dist/windows/aria2c.zip" -d "$WORKSPACE_ROOT/dist/windows/"
-          mv "$WORKSPACE_ROOT/dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$WORKSPACE_ROOT/dist/windows/bin/aria2c.exe"
+          curl -fL -o "$GITHUB_WORKSPACE/dist/windows/aria2c.zip" https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
+          unzip "$GITHUB_WORKSPACE/dist/windows/aria2c.zip" -d "$GITHUB_WORKSPACE/dist/windows/"
+          mv "$GITHUB_WORKSPACE/dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$GITHUB_WORKSPACE/dist/windows/bin/aria2c.exe"
 
           # Remove temp files before zipping
-          rm -rf "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp" "$WORKSPACE_ROOT/dist/windows/aria2-1.37.0-win-64bit-build1" "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" "$WORKSPACE_ROOT/dist/windows/aria2c.zip"
+          rm -rf "$GITHUB_WORKSPACE/dist/windows/ffmpeg_temp" "$GITHUB_WORKSPACE/dist/windows/aria2-1.37.0-win-64bit-build1" "$GITHUB_WORKSPACE/dist/windows/ffmpeg.zip" "$GITHUB_WORKSPACE/dist/windows/aria2c.zip"
 
-          cd "$WORKSPACE_ROOT/dist/windows"
+          cd "$GITHUB_WORKSPACE/dist/windows"
           ZIP_NAME="yt-playlist-windows-${TAG}.zip"
-          zip -r "$WORKSPACE_ROOT/$ZIP_NAME" *
-          echo "ZIP_PATH=$WORKSPACE_ROOT/$ZIP_NAME" >> $GITHUB_ENV
+          zip -r "$GITHUB_WORKSPACE/$ZIP_NAME" *
+          echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
@@ -89,22 +89,22 @@ jobs:
       - name: Prepare workspace
         run: |
           set -e
-          WORKSPACE_ROOT="${GITHUB_WORKSPACE:-$PWD}"
-          mkdir -p "$WORKSPACE_ROOT/dist/linux/bin"
-          cp "$WORKSPACE_ROOT/yt-playlist-main.py" "$WORKSPACE_ROOT/dist/linux/"
+          
+          mkdir -p "$GITHUB_WORKSPACE/dist/linux/bin"
+          cp "$GITHUB_WORKSPACE/yt-playlist-main.py" "$GITHUB_WORKSPACE/dist/linux/"
 
       - name: Download yt-dlp
         run: |
-          curl -fL -o "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
-          chmod +x "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp"
+          curl -fL -o "$GITHUB_WORKSPACE/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/yt-dlp"
 
       - name: Download FFmpeg static
         run: |
-          curl -fL -o "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-          mkdir -p "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp"
-          tar -xf "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" -C "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" --strip-components=1
-          mv "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp/ffmpeg" "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
-          chmod +x "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
+          curl -fL -o "$GITHUB_WORKSPACE/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+          mkdir -p "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp"
+          tar -xf "$GITHUB_WORKSPACE/dist/linux/ffmpeg.tar.xz" -C "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp" --strip-components=1
+          mv "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp/ffmpeg" "$GITHUB_WORKSPACE/dist/linux/bin/ffmpeg"
+          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/ffmpeg"
 
       - name: Cache aria2c binary
         uses: actions/cache@v3
@@ -117,10 +117,9 @@ jobs:
       - name: Build aria2c if not cached
         run: |
           set -e
-          WORKSPACE_ROOT="${GITHUB_WORKSPACE:-$PWD}"
-          if [ ! -f "$WORKSPACE_ROOT/dist/linux/bin/aria2c" ]; then
-            mkdir -p "$WORKSPACE_ROOT/dist/linux/aria2c_build"
-            cd "$WORKSPACE_ROOT"
+          if [ ! -f "$GITHUB_WORKSPACE/dist/linux/bin/aria2c" ]; then
+            mkdir -p "$GITHUB_WORKSPACE/dist/linux/aria2c_build"
+            cd "$GITHUB_WORKSPACE"
             wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
             tar -xzf aria2-1.37.0.tar.gz
             cd aria2-1.37.0
@@ -133,23 +132,23 @@ jobs:
               --with-openssl
             make -j"$(nproc)"
             strip src/aria2c
-            cp src/aria2c "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
-            chmod +x "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
+            cp src/aria2c "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
+            chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
             # Cleanup build folders
-            rm -rf "$WORKSPACE_ROOT/dist/linux/aria2c_build" "$WORKSPACE_ROOT/aria2-1.37.0" "$WORKSPACE_ROOT/aria2-1.37.0.tar.gz"
+            rm -rf "$GITHUB_WORKSPACE/dist/linux/aria2c_build" "$GITHUB_WORKSPACE/aria2-1.37.0" "$GITHUB_WORKSPACE/aria2-1.37.0.tar.gz"
           fi
 
       - name: Cleanup FFmpeg temp
         run: |
-          rm -rf "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz"
+          rm -rf "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp" "$GITHUB_WORKSPACE/dist/linux/ffmpeg.tar.xz"
 
       - name: Create tar.gz package
         run: |
-          WORKSPACE_ROOT="${GITHUB_WORKSPACE:-$PWD}"
-          cd "$WORKSPACE_ROOT/dist/linux"
+          
+          cd "$GITHUB_WORKSPACE/dist/linux"
           ZIP_NAME="yt-playlist-linux-${TAG}.tar.gz"
-          tar -czf "$WORKSPACE_ROOT/$ZIP_NAME" *
-          echo "ZIP_PATH=$WORKSPACE_ROOT/$ZIP_NAME" >> $GITHUB_ENV
+          tar -czf "$GITHUB_WORKSPACE/$ZIP_NAME" *
+          echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
