@@ -80,56 +80,72 @@ jobs:
           sudo apt install -y unzip zip curl wget build-essential \
           pkg-config libssl-dev zlib1g-dev
 
-
       - name: Extract tag name
         run: |
           REF="${GITHUB_REF}"
           TAG="${REF#refs/tags/}"
           echo "TAG=$TAG" >> $GITHUB_ENV
 
-      - name: Prepare Linux package
+      - name: Prepare workspace
         run: |
           set -e
           WORKSPACE_ROOT="${GITHUB_WORKSPACE:-$PWD}"
-          mkdir -p "$WORKSPACE_ROOT/dist/linux"
+          mkdir -p "$WORKSPACE_ROOT/dist/linux/bin"
           cp "$WORKSPACE_ROOT/yt-playlist-main.py" "$WORKSPACE_ROOT/dist/linux/"
 
-          mkdir -p "$WORKSPACE_ROOT/dist/linux/bin"
-
-          # yt-dlp
+      - name: Download yt-dlp
+        run: |
           curl -fL -o "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
           chmod +x "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp"
 
-          # FFmpeg Linux static
+      - name: Download FFmpeg static
+        run: |
           curl -fL -o "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
           mkdir -p "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp"
           tar -xf "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" -C "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" --strip-components=1
           mv "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp/ffmpeg" "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
           chmod +x "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
 
-          # aria2c minimal static
-          mkdir -p "$WORKSPACE_ROOT/dist/linux/aria2c_build"
-          cd "$WORKSPACE_ROOT"
-          wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
-          tar -xzf aria2-1.37.0.tar.gz
-          cd aria2-1.37.0
-          CFLAGS="-Os -s" LDFLAGS="-static" ./configure \
-            --enable-static --disable-shared \
-            --disable-libaria2 --without-ca-bundle \
-            --without-libnettle --without-libgcrypt \
-            --without-libssh2 --without-libexpat \
-            --without-libxml2 --without-libsqlite3 \
-            --with-openssl
-          make -j"$(nproc)"
-          strip src/aria2c
-          
-          cp src/aria2c "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
-          chmod +x "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
+      - name: Cache aria2c binary
+        uses: actions/cache@v3
+        with:
+          path: dist/linux/bin/aria2c
+          key: aria2c-latest
+          restore-keys: |
+            aria2c-
 
-          # Cleanup
-          rm -rf "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" "$WORKSPACE_ROOT/dist/linux/aria2c_build" "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" "$WORKSPACE_ROOT/aria2-1.37.0" "$WORKSPACE_ROOT/aria2-1.37.0.tar.gz"
+      - name: Build aria2c if not cached
+        run: |
+          set -e
+          WORKSPACE_ROOT="${GITHUB_WORKSPACE:-$PWD}"
+          if [ ! -f "$WORKSPACE_ROOT/dist/linux/bin/aria2c" ]; then
+            mkdir -p "$WORKSPACE_ROOT/dist/linux/aria2c_build"
+            cd "$WORKSPACE_ROOT"
+            wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
+            tar -xzf aria2-1.37.0.tar.gz
+            cd aria2-1.37.0
+            CFLAGS="-Os -s" LDFLAGS="-static" ./configure \
+              --enable-static --disable-shared \
+              --disable-libaria2 --without-ca-bundle \
+              --without-libnettle --without-libgcrypt \
+              --without-libssh2 --without-libexpat \
+              --without-libxml2 --without-libsqlite3 \
+              --with-openssl
+            make -j"$(nproc)"
+            strip src/aria2c
+            cp src/aria2c "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
+            chmod +x "$WORKSPACE_ROOT/dist/linux/bin/aria2c"
+            # Cleanup build folders
+            rm -rf "$WORKSPACE_ROOT/dist/linux/aria2c_build" "$WORKSPACE_ROOT/aria2-1.37.0" "$WORKSPACE_ROOT/aria2-1.37.0.tar.gz"
+          fi
 
-          # GZip everything
+      - name: Cleanup FFmpeg temp
+        run: |
+          rm -rf "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz"
+
+      - name: Create tar.gz package
+        run: |
+          WORKSPACE_ROOT="${GITHUB_WORKSPACE:-$PWD}"
           cd "$WORKSPACE_ROOT/dist/linux"
           ZIP_NAME="yt-playlist-linux-${TAG}.tar.gz"
           tar -czf "$WORKSPACE_ROOT/$ZIP_NAME" *
