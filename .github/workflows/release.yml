@@ -167,14 +167,6 @@ jobs:
         run: |
           rm -rf "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp" "$GITHUB_WORKSPACE/dist/linux/ffmpeg.tar.xz"
 
-      - name: Create tar.gz package
-        run: |
-          
-          cd "$GITHUB_WORKSPACE/dist/linux"
-          ZIP_NAME="yt-playlist-linux-${TAG}.tar.gz"
-          tar -czf "$GITHUB_WORKSPACE/$ZIP_NAME" *
-          echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
-
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
@@ -206,11 +198,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: linux-zip
-
-      - name: Extract linux-zip artifact
-        run: |
-          set -e
-          tar -xzf linux-zip/yt-playlist-linux-${TAG}.tar.gz
 
       - name: Build Docker image with release tag
         run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
