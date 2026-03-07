@@ -294,6 +294,7 @@ jobs:
         run: |
           docker load -i docker-image-latest/docker-image-latest.tar
           docker push $LATEST_IMAGE
+
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -301,7 +302,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.version.outputs.version }}
-          release_name: ${{ steps.version.outputs.version }}
+          release_name: "Release${{ steps.version.outputs.version }}"
           draft: true
       - name: Upload Windows release asset
         uses: actions/upload-release-asset@v1
