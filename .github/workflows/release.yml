@@ -300,7 +300,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.version.outputs.version }}
-          release_name: "Release${{ steps.version.outputs.version }}"
+          release_name: "Release ${{ steps.version.outputs.version }}"
           draft: true
       - name: Upload Windows release asset
         uses: actions/upload-release-asset@v1
