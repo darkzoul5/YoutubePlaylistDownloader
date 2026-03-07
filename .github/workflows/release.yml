@@ -117,7 +117,14 @@ jobs:
           tar -xf "$GITHUB_WORKSPACE/dist/linux/ffmpeg.tar.xz" -C "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp" --strip-components=1
           mv "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp/ffmpeg" "$GITHUB_WORKSPACE/dist/linux/bin/ffmpeg"
           chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/ffmpeg"
-
+      
+      - name: Restore aria2 cache
+        id: aria2-cache
+        uses: actions/cache@v3
+        with:
+          path: dist/linux/bin/aria2c
+          key: aria2c-${{ runner.os }}-1.37.0
+            
       - name: Build aria2c if not cached
         run: |
           set -e
@@ -141,15 +148,6 @@ jobs:
             chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
             rm -rf "$GITHUB_WORKSPACE/dist/linux/aria2c_build" "$GITHUB_WORKSPACE/aria2-1.37.0" "$GITHUB_WORKSPACE/aria2-1.37.0.tar.gz"
           fi
-      - name: Cache aria2c binary
-        id: aria2-cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            dist/linux/bin
-          key: aria2c-${{ runner.os }}-v1
-          restore-keys: |
-            aria2c-${{ runner.os }}-
 
       - name: Show cache status and bin contents
         run: |
