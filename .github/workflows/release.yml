@@ -34,15 +34,15 @@ jobs:
           mkdir -p "$WORKSPACE_ROOT/dist/windows/bin"
 
           # yt-dlp
-          curl -L -o "$WORKSPACE_ROOT/dist/windows/bin/yt-dlp.exe" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+          curl -fL -o "$WORKSPACE_ROOT/dist/windows/bin/yt-dlp.exe" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
 
           # FFmpeg Windows static
-          curl -L -o "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+          curl -fL -o "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
           unzip -q "$WORKSPACE_ROOT/dist/windows/ffmpeg.zip" -d "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp"
           mv $(find "$WORKSPACE_ROOT/dist/windows/ffmpeg_temp" -name ffmpeg.exe | head -n 1) "$WORKSPACE_ROOT/dist/windows/bin/ffmpeg.exe"
 
           # aria2c Windows static
-          curl -L -o "$WORKSPACE_ROOT/dist/windows/aria2c.zip" https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
+          curl -fL -o "$WORKSPACE_ROOT/dist/windows/aria2c.zip" https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
           unzip "$WORKSPACE_ROOT/dist/windows/aria2c.zip" -d "$WORKSPACE_ROOT/dist/windows/"
           mv "$WORKSPACE_ROOT/dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$WORKSPACE_ROOT/dist/windows/bin/aria2c.exe"
 
@@ -97,11 +97,11 @@ jobs:
           mkdir -p "$WORKSPACE_ROOT/dist/linux/bin"
 
           # yt-dlp
-          curl -L -o "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          curl -fL -o "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp" https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
           chmod +x "$WORKSPACE_ROOT/dist/linux/bin/yt-dlp"
 
           # FFmpeg Linux static
-          curl -L -o "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+          curl -fL -o "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
           mkdir -p "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp"
           tar -xf "$WORKSPACE_ROOT/dist/linux/ffmpeg.tar.xz" -C "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp" --strip-components=1
           mv "$WORKSPACE_ROOT/dist/linux/ffmpeg_temp/ffmpeg" "$WORKSPACE_ROOT/dist/linux/bin/ffmpeg"
@@ -145,9 +145,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-linux-package]
     env:
-      REGISTRY_URL: git.darkzoul.org
-      REGISTRY_OWNER: dark_zoul
-      IMAGE_NAME: youtube-playlist-downloader
+      REGISTRY_URL: ghcr.io
+      IMAGE_NAME: youtubeplaylistdownloader
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -170,11 +169,11 @@ jobs:
           tar -xzf yt-playlist-linux-${TAG}.tar.gz
 
       - name: Build Docker image with release tag
-        run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+        run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
       - name: Save Docker image ${TAG} as tar
         run: |
-          docker save -o docker-image.tar ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          docker save -o docker-image.tar ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
       - name: Upload docker-image-${TAG} artifact
         uses: actions/upload-artifact@v4
@@ -183,11 +182,11 @@ jobs:
           path: docker-image.tar
 
       - name: Build Docker image as latest (distinct digest)
-        run: docker build ./ --label build_as_latest=true -t ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
+        run: docker build ./ --label build_as_latest=true -t ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Save Docker image as tar
         run: |
-          docker save -o docker-image-latest.tar ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest 
+          docker save -o docker-image-latest.tar ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:latest 
 
       - name: Upload docker-image-latest artifact
         uses: actions/upload-artifact@v4
@@ -200,9 +199,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-windows-package, build-linux-package, build-docker-image]
     env:
-      REGISTRY_URL: git.darkzoul.org
-      REGISTRY_OWNER: dark_zoul
-      IMAGE_NAME: youtube-playlist-downloader
+      REGISTRY_URL: ghcr.io
+      IMAGE_NAME: youtubeplaylistdownloader
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -217,8 +215,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY_URL }}
-          username: ${{ env.REGISTRY_OWNER }}
-          password: ${{ secrets.MY_REGISTRY_ACCESS_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Load docker image from tar
         run: |
@@ -226,7 +224,7 @@ jobs:
           docker load -i docker-image/docker-image.tar
 
       - name: Push Docker image with release tag
-        run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+        run: docker push ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
       - name: Load docker image from tar
         run: |
@@ -234,7 +232,7 @@ jobs:
           docker load -i docker-image-latest/docker-image-latest.tar
 
       - name: Push Docker image as latest
-        run: docker push ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest    
+        run: docker push ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:latest    
 
       - name: Create GitHub Release
         id: create_release
