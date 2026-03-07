@@ -199,8 +199,8 @@ jobs:
 
       - name: Set docker image names
         run: |
-          echo "RELEASE_IMAGE=ghcr.io/${GITHUB_ACTOR}/youtubeplaylistdownloader:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
-          echo "LATEST_IMAGE=ghcr.io/${GITHUB_ACTOR}/youtubeplaylistdownloader:latest" >> $GITHUB_ENV
+          echo "RELEASE_IMAGE=ghcr.io/${GITHUB_ACTOR}/ytpld:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+          echo "LATEST_IMAGE=ghcr.io/${GITHUB_ACTOR}/ytpld:latest" >> $GITHUB_ENV
 
       - name: Download linux artifact
         uses: actions/download-artifact@v4
@@ -243,8 +243,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: [build-windows-package, build-linux-package, build-docker-image]
-    env:
-      IMAGE_NAME: youtubeplaylistdownloader
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -278,8 +276,8 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Set docker image names
         run: |
-          echo "RELEASE_IMAGE=ghcr.io/${GITHUB_ACTOR}/youtubeplaylistdownloader:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
-          echo "LATEST_IMAGE=ghcr.io/${GITHUB_ACTOR}/youtubeplaylistdownloader:latest" >> $GITHUB_ENV
+          echo "RELEASE_IMAGE=ghcr.io/${GITHUB_ACTOR}/ytpld:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+          echo "LATEST_IMAGE=ghcr.io/${GITHUB_ACTOR}/ytpld:latest" >> $GITHUB_ENV
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -322,21 +320,3 @@ jobs:
           asset_path: linux-release/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
           asset_name: yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
           asset_content_type: application/gzip
-      - name: Upload Docker release tar
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: docker-image/docker-image.tar
-          asset_name: docker-image-${{ steps.version.outputs.version }}.tar
-          asset_content_type: application/x-tar
-      - name: Upload Docker latest tar
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: docker-image-latest/docker-image-latest.tar
-          asset_name: docker-image-latest.tar
-          asset_content_type: application/x-tar
