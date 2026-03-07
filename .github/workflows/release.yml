@@ -63,6 +63,12 @@ jobs:
           # Remove temp files before zipping
           rm -rf "$GITHUB_WORKSPACE/dist/windows/ffmpeg_temp" "$GITHUB_WORKSPACE/dist/windows/aria2-1.37.0-win-64bit-build1" "$GITHUB_WORKSPACE/dist/windows/ffmpeg.zip" "$GITHUB_WORKSPACE/dist/windows/aria2c.zip"
 
+          # Create windows archive
+          cd "$GITHUB_WORKSPACE/dist/windows"
+          ZIP_NAME="yt-playlist-windows-${TAG}.zip"
+          zip -r "$GITHUB_WORKSPACE/$ZIP_NAME" *
+          echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
@@ -162,6 +168,14 @@ jobs:
         run: |
           rm -rf "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp" "$GITHUB_WORKSPACE/dist/linux/ffmpeg.tar.xz"
 
+      - name: Archive Linux package
+        run: |
+          set -e
+          cd "$GITHUB_WORKSPACE/dist/linux"
+          ZIP_NAME="yt-playlist-linux-${TAG}.tar.gz"
+          tar -czf "$GITHUB_WORKSPACE/$ZIP_NAME" *
+          echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
+
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
@@ -193,6 +207,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: linux-zip
+
+      - name: Extract linux artifact
+        run: |
+          set -e
+          tar -xzf linux-zip/yt-playlist-linux-${TAG}.tar.gz -C .
 
       - name: Build Docker image with release tag
         run: docker build ./ -t ${{ env.REGISTRY_URL }}/${{ github.actor }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
