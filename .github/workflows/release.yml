@@ -126,28 +126,29 @@ jobs:
           key: aria2c-${{ runner.os }}-1.37.0
             
       - name: Build aria2c if not cached
+        if: steps.aria2-cache.outputs.cache-hit != 'true'   
         run: |
           set -e
           mkdir -p "$GITHUB_WORKSPACE/dist/linux/bin"
-          if [ ! -f "$GITHUB_WORKSPACE/dist/linux/bin/aria2c" ]; then
-            mkdir -p "$GITHUB_WORKSPACE/dist/linux/aria2c_build"
-            cd "$GITHUB_WORKSPACE"
-            wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
-            tar -xzf aria2-1.37.0.tar.gz
-            cd aria2-1.37.0
-            CFLAGS="-Os -s" LDFLAGS="-static" ./configure \
-              --enable-static --disable-shared \
-              --disable-libaria2 --without-ca-bundle \
-              --without-libnettle --without-libgcrypt \
-              --without-libssh2 --without-libexpat \
-              --without-libxml2 --without-libsqlite3 \
-              --with-openssl
-            make -j"$(nproc)"
-            strip src/aria2c
-            cp src/aria2c "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
-            chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
-            rm -rf "$GITHUB_WORKSPACE/dist/linux/aria2c_build" "$GITHUB_WORKSPACE/aria2-1.37.0" "$GITHUB_WORKSPACE/aria2-1.37.0.tar.gz"
-          fi
+
+          mkdir -p "$GITHUB_WORKSPACE/dist/linux/aria2c_build"
+          cd "$GITHUB_WORKSPACE"
+          wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
+          tar -xzf aria2-1.37.0.tar.gz
+          cd aria2-1.37.0
+          CFLAGS="-Os -s" LDFLAGS="-static" ./configure \
+            --enable-static --disable-shared \
+            --disable-libaria2 --without-ca-bundle \
+            --without-libnettle --without-libgcrypt \
+            --without-libssh2 --without-libexpat \
+            --without-libxml2 --without-libsqlite3 \
+            --with-openssl
+          make -j"$(nproc)"
+          strip src/aria2c
+          cp src/aria2c "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
+          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
+          rm -rf "$GITHUB_WORKSPACE/dist/linux/aria2c_build" "$GITHUB_WORKSPACE/aria2-1.37.0" "$GITHUB_WORKSPACE/aria2-1.37.0.tar.gz"
+
 
       - name: Show cache status and bin contents
         run: |
