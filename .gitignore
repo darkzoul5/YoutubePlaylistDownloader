@@ -6,6 +6,10 @@ config/yt-playlist-config.json
 /tmp*
 /*/tmp*
 *.code-workspace
+/bin/*
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
