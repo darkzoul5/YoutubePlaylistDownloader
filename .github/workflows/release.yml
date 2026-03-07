@@ -5,7 +5,12 @@ on:
     #tags:
       #- "v*.*.*"
   workflow_dispatch:
-
+    inputs:
+      tag:
+        description: "Release tag (e.g., v0.1.0)"
+        required: true
+        type: string
+    
 jobs:
   build-windows-package:
     runs-on: ubuntu-latest
@@ -73,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-zip
-          path: $GITHUB_WORKSPACE/yt-playlist-windows-*.zip
+          path: ${{ github.workspace }}/yt-playlist-windows-*.zip
 
 
 
@@ -179,7 +184,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-zip
-          path: $GITHUB_WORKSPACE/yt-playlist-linux-*.tar.gz
+          path: ${{ github.workspace }}/yt-playlist-linux-*.tar.gz
 
   build-docker-image:
     runs-on: ubuntu-latest
