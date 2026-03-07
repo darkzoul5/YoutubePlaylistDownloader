@@ -305,6 +305,8 @@ jobs:
           draft: true
       - name: Upload Windows release asset
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: windows-release/yt-playlist-windows-${{ steps.version.outputs.version }}.zip
@@ -312,6 +314,8 @@ jobs:
           asset_content_type: application/zip
       - name: Upload Linux release asset
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: linux-release/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
@@ -319,6 +323,8 @@ jobs:
           asset_content_type: application/gzip
       - name: Upload Docker release tar
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: docker-image/docker-image.tar
@@ -326,6 +332,8 @@ jobs:
           asset_content_type: application/x-tar
       - name: Upload Docker latest tar
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: docker-image-latest/docker-image-latest.tar
