@@ -116,7 +116,7 @@ You can run YouTube Playlist Downloader using the official Docker image.
 ### Run the container
 
 ```pwsh
-docker run -v /path/to/downloads:/app/downloads -v /path/to/config:/app/config ghcr.io/dark_zoul/YoutubePlaylistDownloader:latest
+docker run -v /path/to/downloads:/app/downloads -v /path/to/config:/app/config ghcr.io/dark_zoul/ytpld:latest
 ```
 
 Replace `/path/to/downloads` and `/path/to/config` with your local directories.
@@ -133,7 +133,7 @@ Create a `docker-compose.yml` with the following content (replace the host paths
 ```yaml
 services:
   yt-downloader:
-    image: ghcr.io/dark_zoul/YoutubePlaylistDownloader:latest
+    image: ghcr.io/dark_zoul/ytpld:latest
     container_name: yt-downloader
     restart: no
     volumes:

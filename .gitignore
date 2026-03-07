@@ -3,7 +3,7 @@
 
 #Custom for this project
 yt-playlist-config.json
-/bin/
+/bin
 /config/
 # Byte-compiled / optimized / DLL files
 __pycache__/
