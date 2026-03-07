@@ -204,15 +204,19 @@ jobs:
         with:
           name: linux-zip
 
-      - name: Extract linux artifact
+      - name: Prepare Docker build context
         run: |
-          mkdir -p dist/linux
-          tar -xzf yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz -C dist/linux
+          mkdir -p dist/linux-docker
+          cp Dockerfile dist/linux-docker/
+          echo "Copying and extracting Linux artifact..."
+          tar -xzf yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz -C dist/linux-docker/
+          echo "Build context contents:"
+          ls -R dist/linux-docker
 
       - name: Build Docker image (release)
-        run: docker build dist/linux -t $RELEASE_IMAGE
+        run: docker build dist/linux-docker -t $RELEASE_IMAGE
 
-      - name: Save Docker image as tar
+      - name: Save Docker image as tar (release)
         run: docker save -o docker-image.tar $RELEASE_IMAGE
 
       - name: Upload docker-image artifact
@@ -222,7 +226,7 @@ jobs:
           path: docker-image.tar
 
       - name: Build Docker image (latest)
-        run: docker build dist/linux --label build_as_latest=true -t $LATEST_IMAGE
+        run: docker build dist/linux-docker --label build_as_latest=true -t $LATEST_IMAGE
 
       - name: Save Docker image as tar (latest)
         run: docker save -o docker-image-latest.tar $LATEST_IMAGE
