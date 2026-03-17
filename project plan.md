@@ -2,11 +2,15 @@
 
 ## Subject Area
 
-- TBD
+- Tool for downloading and synchronizing YouTube playlists.
+- Focuses on reliable batch downloading, format selection (audio and/or video), configurable quality and keeping local copies synced with playlist changes.
+- Targets power users and archivists who need large-scale, repeatable playlist archiving and ongoing synchronization, with GUI interfaces.
 
 ## Problem
 
-- TBD
+- Users and power-users who manage large or frequently changing YouTube playlists lack a dependable, configurable tool that:
+  - correctly detects and downloads new videos while avoiding duplicates,
+  - and can be configured easily via file or GUI for repeatable workflows.
 
 ## Users Definition
 
@@ -47,3 +51,4 @@ Individuals who need to download a large number of videos or audio files from a 
   - Python
 - Frontend
   - qt ?
+  - Tkinter?
