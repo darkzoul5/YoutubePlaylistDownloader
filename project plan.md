@@ -38,6 +38,7 @@ Individuals who need to download a large number of videos or audio files from a 
 - Allows adjusting all settings from the GUI
 - Modern Design
 
+
 ## Platform
 
 - Desktop application
