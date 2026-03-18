@@ -1,6 +1,6 @@
 # YouTube Playlist Downloader
 
-[![Build Release](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build.yml)
+[![Build Release](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build_v2.yml)
 [![Unit tests](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml)
 
 A cross-platform tool for downloading entire YouTube playlists as MP3 or MP4 files, using [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org/), and [aria2c](https://github.com/aria2/aria2). Includes Gitea CI/CD workflow for packaging and releasing Windows and Linux binaries.
