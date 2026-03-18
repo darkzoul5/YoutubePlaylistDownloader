@@ -62,57 +62,58 @@ jobs:
         shell: pwsh
         run: |
           $VERSION = "${{ steps.version.outputs.version }}"
-          New-Item -ItemType Directory -Force -Path "dist/windows/bin"
-          Copy-Item "yt-playlist-main.py" "dist/windows/"
+          $WORKSPACE = "${{ github.workspace }}"
+          New-Item -ItemType Directory -Force -Path "$WORKSPACE/dist/windows/bin"
+          Copy-Item "$WORKSPACE/yt-playlist-main.py" "$WORKSPACE/dist/windows/"
           
           # yt-dlp
-          Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "dist/windows/bin/yt-dlp.exe"
+          Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "$WORKSPACE/dist/windows/bin/yt-dlp.exe"
           
           # FFmpeg
-          Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "dist/windows/ffmpeg.zip"
-          Expand-Archive "dist/windows/ffmpeg.zip" -DestinationPath "dist/windows/ffmpeg_temp"
-          $ffmpegExe = Get-ChildItem -Path "dist/windows/ffmpeg_temp" -Filter "ffmpeg.exe" -Recurse | Select-Object -First 1
-          Move-Item $ffmpegExe.FullName "dist/windows/bin/ffmpeg.exe"
+          Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "$WORKSPACE/dist/windows/ffmpeg.zip"
+          Expand-Archive "$WORKSPACE/dist/windows/ffmpeg.zip" -DestinationPath "$WORKSPACE/dist/windows/ffmpeg_temp"
+          $ffmpegExe = Get-ChildItem -Path "$WORKSPACE/dist/windows/ffmpeg_temp" -Filter "ffmpeg.exe" -Recurse | Select-Object -First 1
+          Move-Item $ffmpegExe.FullName "$WORKSPACE/dist/windows/bin/ffmpeg.exe"
           
           # aria2c (Windows Portable)
-          Invoke-WebRequest -Uri "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip" -OutFile "dist/windows/aria2c.zip"
-          Expand-Archive "dist/windows/aria2c.zip" -DestinationPath "dist/windows/aria2_temp"
-          Move-Item "dist/windows/aria2_temp/aria2-1.37.0-win-64bit-build1/aria2c.exe" "dist/windows/bin/aria2c.exe"
+          Invoke-WebRequest -Uri "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip" -OutFile "$WORKSPACE/dist/windows/aria2c.zip"
+          Expand-Archive "$WORKSPACE/dist/windows/aria2c.zip" -DestinationPath "$WORKSPACE/dist/windows/aria2_temp"
+          Move-Item "$WORKSPACE/dist/windows/aria2_temp/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$WORKSPACE/dist/windows/bin/aria2c.exe"
           
           # Build .exe using PyInstaller
           pip install pyinstaller
-          pyinstaller --onefile --name "yt-playlist-downloader" --add-data "src;ytpld" yt-playlist-main.py
-          Move-Item "dist/yt-playlist-downloader.exe" "dist/windows/yt-playlist-downloader.exe"
+          pyinstaller --onefile --name "yt-playlist-downloader" --workpath "$WORKSPACE/build" --specpath "$WORKSPACE" --distpath "$WORKSPACE/dist" --add-data "$WORKSPACE/src;ytpld" "$WORKSPACE/yt-playlist-main.py"
+          Move-Item "$WORKSPACE/dist/yt-playlist-downloader.exe" "$WORKSPACE/dist/windows/yt-playlist-downloader.exe"
 
           # Cleanup & Archive
-          Remove-Item -Recurse -Force "dist/windows/ffmpeg_temp", "dist/windows/aria2_temp", "dist/windows/*.zip"
-          Compress-Archive -Path "dist/windows/*" -DestinationPath "yt-playlist-windows-$VERSION.zip"
+          Remove-Item -Recurse -Force "$WORKSPACE/dist/windows/ffmpeg_temp", "$WORKSPACE/dist/windows/aria2_temp", "$WORKSPACE/dist/windows/*.zip"
+          Compress-Archive -Path "$WORKSPACE/dist/windows/*" -DestinationPath "$WORKSPACE/yt-playlist-windows-$VERSION.zip"
 
       # --- LINUX BUILD ---
       - name: Build Linux Package
         if: matrix.platform == 'linux'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          mkdir -p dist/linux/bin
-          cp yt-playlist-main.py dist/linux/
+          mkdir -p "$GITHUB_WORKSPACE/dist/linux/bin"
+          cp "$GITHUB_WORKSPACE/yt-playlist-main.py" "$GITHUB_WORKSPACE/dist/linux/"
           
           # yt-dlp
-          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o dist/linux/bin/yt-dlp
-          chmod +x dist/linux/bin/yt-dlp
+          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o "$GITHUB_WORKSPACE/dist/linux/bin/yt-dlp"
+          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/yt-dlp"
 
           # FFmpeg (static)
-          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg.tar.xz
-          mkdir -p ffmpeg_temp
-          tar -xf ffmpeg.tar.xz -C ffmpeg_temp --strip-components=1
-          mv ffmpeg_temp/ffmpeg dist/linux/bin/
-          chmod +x dist/linux/bin/ffmpeg
+          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o "$GITHUB_WORKSPACE/ffmpeg.tar.xz"
+          mkdir -p "$GITHUB_WORKSPACE/ffmpeg_temp"
+          tar -xf "$GITHUB_WORKSPACE/ffmpeg.tar.xz" -C "$GITHUB_WORKSPACE/ffmpeg_temp" --strip-components=1
+          mv "$GITHUB_WORKSPACE/ffmpeg_temp/ffmpeg" "$GITHUB_WORKSPACE/dist/linux/bin/"
+          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/ffmpeg"
 
       - name: Cache aria2c binary (Linux)
         if: matrix.platform == 'linux'
         id: aria2-cache
         uses: actions/cache@v4
         with:
-          path: dist/linux/bin/aria2c
+          path: ${{ github.workspace }}/dist/linux/bin/aria2c
           key: aria2c-linux-1.37.0
 
       - name: Build aria2c (Linux)
@@ -149,15 +150,15 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           # Archive
-          cd dist/linux && tar -czf ../../yt-playlist-linux-$VERSION.tar.gz *
+          cd "$GITHUB_WORKSPACE/dist/linux" && tar -czf "$GITHUB_WORKSPACE/yt-playlist-linux-$VERSION.tar.gz" *
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact_name }}
           path: |
-            *.zip
-            *.tar.gz
+            ${{ github.workspace }}/*.zip
+            ${{ github.workspace }}/*.tar.gz
 
   docker:
     needs: build
@@ -177,18 +178,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: linux-release
-          path: dist/linux-docker
+          path: ${{ github.workspace }}/dist/linux-docker
 
       - name: Prepare Docker build context
         run: |
-          cd dist/linux-docker
-          tar -xzf yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
-          cp ../../Dockerfile .
-          cp ../../docker-entrypoint.sh .
+          cd "$GITHUB_WORKSPACE/dist/linux-docker"
+          tar -xzf "$GITHUB_WORKSPACE/dist/linux-docker/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz"
+          cp "$GITHUB_WORKSPACE/Dockerfile" .
+          cp "$GITHUB_WORKSPACE/docker-entrypoint.sh" .
           # Ensure ytpld package is present from src/
-          if [ ! -d "src" ]; then cp -r ../../src . ; fi
+          if [ ! -d "src" ]; then cp -r "$GITHUB_WORKSPACE/src" . ; fi
           # Ensure config directory is present
-          if [ ! -d "config" ]; then cp -r ../../config . ; fi
+          if [ ! -d "config" ]; then cp -r "$GITHUB_WORKSPACE/config" . ; fi
 
       - name: Set docker image names
         run: |
@@ -199,19 +200,19 @@ jobs:
       - name: Build Docker image
         run: |
           docker build . -t $RELEASE_IMAGE -t $LATEST_IMAGE
-        working-directory: dist/linux-docker
+        working-directory: ${{ github.workspace }}/dist/linux-docker
 
       - name: Save Docker images
         run: |
           docker save -o docker-image.tar $RELEASE_IMAGE
           docker save -o docker-image-latest.tar $LATEST_IMAGE
-        working-directory: dist/linux-docker
+        working-directory: ${{ github.workspace }}/dist/linux-docker
 
       - name: Upload Docker artifacts
         uses: actions/upload-artifact@v5
         with:
           name: docker-images
-          path: dist/linux-docker/docker-image*.tar
+          path: ${{ github.workspace }}/dist/linux-docker/docker-image*.tar
 
   release:
     needs: [build, docker]
@@ -220,6 +221,8 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        with:
+          path: ${{ github.workspace }}/artifacts
 
       - name: Get version
         id: version
@@ -238,9 +241,9 @@ jobs:
 
       - name: Push Docker images
         run: |
-          docker load -i docker-images/docker-image.tar
+          docker load -i "${{ github.workspace }}/artifacts/docker-images/docker-image.tar"
           docker push ghcr.io/${GITHUB_ACTOR}/ytpld:${{ steps.version.outputs.version }}
-          docker load -i docker-images/docker-image-latest.tar
+          docker load -i "${{ github.workspace }}/artifacts/docker-images/docker-image-latest.tar"
           docker push ghcr.io/${GITHUB_ACTOR}/ytpld:latest
 
       - name: Create Release
@@ -248,5 +251,5 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.tag }}
           files: |
-            **/*.zip
-            **/*.tar.gz
+            ${{ github.workspace }}/artifacts/**/*.zip
+            ${{ github.workspace }}/artifacts/**/*.tar.gz
