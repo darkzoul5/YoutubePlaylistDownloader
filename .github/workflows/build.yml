@@ -64,7 +64,7 @@ jobs:
           echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: windows-release
           path: ${{ github.workspace }}/yt-playlist-windows-*.zip
@@ -112,7 +112,7 @@ jobs:
       
       - name: Restore aria2 cache
         id: aria2-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: dist/linux/bin/aria2c
           key: aria2c-${{ runner.os }}-1.37.0
@@ -160,7 +160,7 @@ jobs:
           tar -czf "$GITHUB_WORKSPACE/$TAR_NAME" *
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: linux-release
           path: ${{ github.workspace }}/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
@@ -205,7 +205,7 @@ jobs:
         run: docker save -o docker-image.tar $RELEASE_IMAGE
 
       - name: Upload docker-image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-image
           path: docker-image.tar
@@ -217,7 +217,7 @@ jobs:
         run: docker save -o docker-image-latest.tar $LATEST_IMAGE
 
       - name: Upload docker-image-latest artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: docker-image-latest
           path: docker-image-latest.tar
