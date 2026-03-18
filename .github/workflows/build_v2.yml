@@ -146,6 +146,8 @@ jobs:
           cp ../../docker-entrypoint.sh .
           # Ensure ytpld package is present from src/
           if [ ! -d "src" ]; then cp -r ../../src . ; fi
+          # Ensure config directory is present
+          if [ ! -d "config" ]; then cp -r ../../config . ; fi
 
       - name: Set docker image names
         run: |
