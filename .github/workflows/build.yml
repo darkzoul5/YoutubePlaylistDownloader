@@ -247,13 +247,7 @@ jobs:
         id: version
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ inputs.tag }}"
-          elif [ "${{ github.event_name }}" = "release" ]; then
-            VERSION="${{ github.event.release.tag_name }}"
-          else
-            VERSION="${{ github.ref_name }}"
-          fi
+          VERSION="${{ inputs.tag }}"
           VERSION="${VERSION#v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Set docker image names
