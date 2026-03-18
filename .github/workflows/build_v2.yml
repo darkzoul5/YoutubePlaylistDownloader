@@ -79,6 +79,11 @@ jobs:
           Expand-Archive "dist/windows/aria2c.zip" -DestinationPath "dist/windows/aria2_temp"
           Move-Item "dist/windows/aria2_temp/aria2-1.37.0-win-64bit-build1/aria2c.exe" "dist/windows/bin/aria2c.exe"
           
+          # Build .exe using PyInstaller
+          pip install pyinstaller
+          pyinstaller --onefile --name "yt-playlist-downloader" --add-data "ytpld;ytpld" yt-playlist-main.py
+          Move-Item "dist/yt-playlist-downloader.exe" "dist/windows/yt-playlist-downloader.exe"
+
           # Cleanup & Archive
           Remove-Item -Recurse -Force "dist/windows/ffmpeg_temp", "dist/windows/aria2_temp", "dist/windows/*.zip"
           Compress-Archive -Path "dist/windows/*" -DestinationPath "yt-playlist-windows-$VERSION.zip"
@@ -172,6 +177,15 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+
+      - name: Get version
+        id: version
+        shell: bash
+        run: |
+          TAG="${{ github.event.inputs.tag || inputs.tag }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
