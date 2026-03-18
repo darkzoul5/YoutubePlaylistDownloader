@@ -106,7 +106,48 @@ jobs:
           tar -xf ffmpeg.tar.xz -C ffmpeg_temp --strip-components=1
           mv ffmpeg_temp/ffmpeg dist/linux/bin/
           chmod +x dist/linux/bin/ffmpeg
+
+      - name: Cache aria2c binary (Linux)
+        if: matrix.platform == 'linux'
+        id: aria2-cache
+        uses: actions/cache@v4
+        with:
+          path: dist/linux/bin/aria2c
+          key: aria2c-linux-1.37.0
+
+      - name: Build aria2c (Linux)
+        if: matrix.platform == 'linux' && steps.aria2-cache.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          sudo apt update && sudo apt install -y build-essential pkg-config libssl-dev zlib1g-dev wget
           
+          mkdir -p "$GITHUB_WORKSPACE/dist/linux/bin"
+          cd "$GITHUB_WORKSPACE"
+          
+          wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
+          tar -xzf aria2-1.37.0.tar.gz
+          cd aria2-1.37.0
+          
+          CFLAGS="-Os -s" LDFLAGS="-static" ./configure \
+            --enable-static --disable-shared \
+            --disable-libaria2 --without-ca-bundle \
+            --without-libnettle --without-libgcrypt \
+            --without-libssh2 --without-libexpat \
+            --without-libxml2 --without-libsqlite3 \
+            --with-openssl
+            
+          make -j"$(nproc)"
+          strip src/aria2c
+          cp src/aria2c "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
+          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
+          
+          cd "$GITHUB_WORKSPACE"
+          rm -rf aria2-1.37.0 aria2-1.37.0.tar.gz
+
+      - name: Archive Linux Package
+        if: matrix.platform == 'linux'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
           # Archive
           cd dist/linux && tar -czf ../../yt-playlist-linux-$VERSION.tar.gz *
 
