@@ -6,7 +6,6 @@
 
 A cross-platform tool for downloading entire YouTube playlists as MP3 or MP4 files, using [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org/), and [aria2c](https://github.com/aria2/aria2). Includes Gitea CI/CD workflow for packaging and releasing Windows and Linux binaries.
 
-
 Supports audio, video, or both download modes, music and videos are numbered as they are on your youtube playlist, playlist cleanup, and configurable parallel download options.
 
 ---
@@ -113,7 +112,8 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
   - Offer to clean up files that are no longer in the playlist
 
 ---
- ## CLI flags
+
+## CLI flags
 
 When running the script locally (for example `python yt-playlist-main.py`), you can pass the following flags:
 
@@ -134,8 +134,8 @@ python yt-playlist-main.py --prune --yes
 # Use a different config file
 python yt-playlist-main.py --config custom-config.json
 ```
----
 
+---
 
 ## Docker Usage
 
@@ -180,6 +180,7 @@ docker compose up -d
 You can pass environment variables.
 
 Environment variables
+
 - `YTPL_DEBUG` (0/1): When set to `1` shows verbose output from external binaries (yt-dlp, ffmpeg, aria2c). Useful for diagnosing failures.
 - `YTPL_PRUNE` (0/1): When set to `1` enables pruning — files that are not present in any configured playlist will be deleted (requires confirmation unless `YTPL_YES` is set).
 - `YTPL_YES` (0/1): Auto-confirm prompts (use with `YTPL_PRUNE` in automated runs).
@@ -193,8 +194,8 @@ Environment variables
 - `YTPL_DOWNLOAD_MODE`: `audio`, `video`, or `both` — default download mode applied to playlists that don't set it individually.
 
 Tip
-- Mount a config file for complex setups to avoid long environment variables. Example: `- /host/config/yt-playlist-config.json:/app/config/yt-playlist-config.json`.
 
+- Mount a config file for complex setups to avoid long environment variables. Example: `- /host/config/yt-playlist-config.json:/app/config/yt-playlist-config.json`.
 
 ## Troubleshooting
 

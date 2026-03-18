@@ -1,8 +1,8 @@
 version: '3.8'
 services:
-  yt-downloader:
-    image: git.darkzoul.org/dark_zoul/youtube-playlist-downloader:latest
-    container_name: yt-downloader
+  ytpld:
+    image: git.darkzoul.org/dark_zoul/ytpld:latest
+    container_name: ytpld
     restart: no
     volumes:
       - /path/to/downloads:/app/downloads
