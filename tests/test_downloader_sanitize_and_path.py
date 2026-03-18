@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ytplaylist.downloader import PlaylistDownloader
+from src.downloader import PlaylistDownloader
 from tests.dummy_config import DummyConfig
 
 

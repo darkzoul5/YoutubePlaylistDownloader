@@ -16,7 +16,7 @@ import shutil
 
 # Make imports robust when running the script directly from different working directories.
 # Ensure the repository root and this tests folder are on sys.path so the script can import
-# both the package (`ytplaylist`) and local test helpers (`tests.temp_config`).
+# both the package (`src`) and local test helpers (`tests.temp_config`).
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TESTS_DIR = Path(__file__).resolve().parent
 if str(REPO_ROOT) not in sys.path:
@@ -46,7 +46,7 @@ if bin_dir.exists():
         os.environ.setdefault("ARIA2C_PATH", str(aria2c_path))
         print(f"Using local aria2c at: {aria2c_path}")
 
-from ytplaylist.downloader import PlaylistDownloader
+from src.downloader import PlaylistDownloader
 from tests.dummy_config import DummyConfig
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')

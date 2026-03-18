@@ -1,6 +1,6 @@
 import logging
 from tests.dummy_config import DummyConfig
-from ytplaylist.manager import PlaylistManager
+from src.manager import PlaylistManager
 
 
 def test_manager_warns_and_sleeps(monkeypatch, caplog):
@@ -11,7 +11,7 @@ def test_manager_warns_and_sleeps(monkeypatch, caplog):
         slept["called"] = True
 
     # monkeypatch the sleep used inside the manager module
-    monkeypatch.setattr("ytplaylist.manager.time.sleep", fake_sleep)
+    monkeypatch.setattr("src.manager.time.sleep", fake_sleep)
 
     caplog.set_level(logging.WARNING)
     cfg = DummyConfig()

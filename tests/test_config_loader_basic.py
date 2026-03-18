@@ -2,7 +2,7 @@ import json
 import shutil
 from pathlib import Path
 
-from ytplaylist.config import ConfigLoader
+from src.config import ConfigLoader
 
 
 def test_config_loader_reads_properties(tmp_path, monkeypatch):
