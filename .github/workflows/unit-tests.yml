@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: "https://gitea.com/actions/checkout@v5"
+        uses: actions/checkout@v5
 
       - name: Create venv and install project
         run: |
