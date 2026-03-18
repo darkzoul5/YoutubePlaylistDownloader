@@ -11,16 +11,13 @@ import sys
 import shutil
 import time
 from pathlib import Path
-
+from src.downloader import PlaylistDownloader
+from tests.dummy_config import DummyConfig
 # Make imports robust when running the script directly from different working directories.
 # Ensure the repository root is on sys.path so the script can import `src`.
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
-
-#import from src and tests
-from src.downloader import PlaylistDownloader
-from tests.dummy_config import DummyConfig
 
 if not os.getenv("INTEGRATION_TEST"):
     print("Skipping full integration test (set INTEGRATION_TEST=1 to enable)")
