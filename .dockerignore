@@ -1,4 +1,5 @@
 .gitea/
+.github/
 .venv/
 ./bin/
 # Python bytecode
