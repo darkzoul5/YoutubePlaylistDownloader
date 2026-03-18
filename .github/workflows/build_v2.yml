@@ -1,0 +1,145 @@
+name: Build Release V2
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g., v0.1.0)"
+        required: true
+        default: "v0.1.0"
+        type: string
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        default: "draft"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+      - name: Run tests
+        run: pytest
+
+  build:
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-latest
+            artifact_name: windows-release
+          - platform: linux
+            os: ubuntu-latest
+            artifact_name: linux-release
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Get version
+        id: version
+        shell: bash
+        run: |
+          TAG="${{ github.event.inputs.tag || inputs.tag }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # --- WINDOWS BUILD ---
+      - name: Build Windows Package
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $VERSION = "${{ steps.version.outputs.version }}"
+          New-Item -ItemType Directory -Force -Path "dist/windows/bin"
+          Copy-Item "yt-playlist-main.py" "dist/windows/"
+          
+          # yt-dlp
+          Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "dist/windows/bin/yt-dlp.exe"
+          
+          # FFmpeg
+          Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "dist/windows/ffmpeg.zip"
+          Expand-Archive "dist/windows/ffmpeg.zip" -DestinationPath "dist/windows/ffmpeg_temp"
+          $ffmpegExe = Get-ChildItem -Path "dist/windows/ffmpeg_temp" -Filter "ffmpeg.exe" -Recurse | Select-Object -First 1
+          Move-Item $ffmpegExe.FullName "dist/windows/bin/ffmpeg.exe"
+          
+          # aria2c (Windows Portable)
+          Invoke-WebRequest -Uri "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip" -OutFile "dist/windows/aria2c.zip"
+          Expand-Archive "dist/windows/aria2c.zip" -DestinationPath "dist/windows/aria2_temp"
+          Move-Item "dist/windows/aria2_temp/aria2-1.37.0-win-64bit-build1/aria2c.exe" "dist/windows/bin/aria2c.exe"
+          
+          # Cleanup & Archive
+          Remove-Item -Recurse -Force "dist/windows/ffmpeg_temp", "dist/windows/aria2_temp", "dist/windows/*.zip"
+          Compress-Archive -Path "dist/windows/*" -DestinationPath "yt-playlist-windows-$VERSION.zip"
+
+      # --- LINUX BUILD ---
+      - name: Build Linux Package
+        if: matrix.platform == 'linux'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p dist/linux/bin
+          cp yt-playlist-main.py dist/linux/
+          
+          # yt-dlp
+          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o dist/linux/bin/yt-dlp
+          chmod +x dist/linux/bin/yt-dlp
+
+          # FFmpeg (static)
+          curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg.tar.xz
+          mkdir -p ffmpeg_temp
+          tar -xf ffmpeg.tar.xz -C ffmpeg_temp --strip-components=1
+          mv ffmpeg_temp/ffmpeg dist/linux/bin/
+          chmod +x dist/linux/bin/ffmpeg
+          
+          # Archive
+          cd dist/linux && tar -czf ../../yt-playlist-linux-$VERSION.tar.gz *
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            *.zip
+            *.tar.gz
+
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download Linux Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-release
+      - name: Build and Push Docker (Optional)
+        run: |
+          echo "Placeholder for Docker build if needed"
+
+  release:
+    needs: [build, docker]
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.inputs.tag, 'v')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          files: |
+            **/*.zip
+            **/*.tar.gz
