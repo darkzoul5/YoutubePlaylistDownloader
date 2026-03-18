@@ -80,9 +80,9 @@ jobs:
           Move-Item "$WORKSPACE/dist/windows/aria2_temp/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$WORKSPACE/dist/windows/bin/aria2c.exe"
           
           # Build .exe using PyInstaller
-          # Use --collect-all ytpld to ensure all submodules and data in the ytpld package are included
+          # Use --add-data to include the src folder so internal imports (like 'import cli') work
           pip install pyinstaller
-          pyinstaller --onefile --name "yt-playlist-downloader" --workpath "$WORKSPACE/build" --specpath "$WORKSPACE" --distpath "$WORKSPACE/dist" --collect-all "ytpld" "$WORKSPACE/yt-playlist-main.py"
+          pyinstaller --onefile --name "yt-playlist-downloader" --workpath "$WORKSPACE/build" --specpath "$WORKSPACE" --distpath "$WORKSPACE/dist" --add-data "$WORKSPACE/src;src" "$WORKSPACE/yt-playlist-main.py"
           Move-Item "$WORKSPACE/dist/yt-playlist-downloader.exe" "$WORKSPACE/dist/windows/yt-playlist-downloader.exe"
 
           # Cleanup & Archive
