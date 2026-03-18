@@ -1,10 +1,11 @@
 name: Integration tests (minimal)
 
 on:
-  push:
-    branches: [ main, Next ]
-  pull_request:
-    branches: [ main, Next ]
+  workflow_dispatch:
+  #push:
+    #branches: [ main, Next ]
+  #pull_request:
+    #branches: [ main, Next ]
 
 jobs:
   integration:

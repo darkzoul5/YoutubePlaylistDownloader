@@ -1,13 +1,14 @@
 name: Unit tests
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main, Next ]
   pull_request:
     branches: [ main, Next ]
 
 jobs:
-  unit:
+  tests:
     name: Run unit tests
     runs-on: ubuntu-latest
 
