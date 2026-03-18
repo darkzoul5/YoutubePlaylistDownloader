@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "yt-playlist-downloader"
-version = "v1.1.4"
+name = "ytpld"
+version = "v1.1.1"
 description = "YouTube playlist downloader"
 readme = "README.md"
 authors = [ { name = "Dark_Zoul" } ]
@@ -15,5 +15,5 @@ keywords = ["youtube", "yt-dlp", "playlist", "downloader"]
 "Home" = "https://git.darkzoul.org/dark_zoul/youtube-playlist-downloader"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["ytplaylist*"]
+where = ["src"]
+include = ["*"]

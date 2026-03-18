@@ -29,7 +29,7 @@ Individuals who need to download a large number of videos or audio files from a 
   - Download type (audio, video)
   - Save directory
   - Use of aria2c
-  - aria2c-related settings
+  - aria2-related settings
   - GUI settings
 
 ## GUI
@@ -37,7 +37,6 @@ Individuals who need to download a large number of videos or audio files from a 
 - Has buttons for all features
 - Allows adjusting all settings from the GUI
 - Modern Design
-
 
 ## Platform
 
@@ -53,3 +52,4 @@ Individuals who need to download a large number of videos or audio files from a 
 - Frontend
   - qt ?
   - Tkinter?
+  
