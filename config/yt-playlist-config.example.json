@@ -8,9 +8,9 @@
       "archive": "archive.txt"
     }
   ],
-  "yt_dlp_path": "./bin/yt-dlp",
-  "ffmpeg_path": "./bin/ffmpeg",
-  "aria2c_path": "./bin/aria2c",
+  "yt_dlp_path": "./bin/yt-dlp.exe",
+  "ffmpeg_path": "./bin/ffmpeg.exe",
+  "aria2c_path": "./bin/aria2c.exe",
   "max_parallel_downloads": 6,
   "aria2c_connections": 4
 }
