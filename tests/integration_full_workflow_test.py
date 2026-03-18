@@ -10,9 +10,11 @@ import os
 import sys
 import logging
 import shutil
-from pathlib import Path
 import time
-import shutil
+from pathlib import Path
+
+from src.downloader import PlaylistDownloader
+from tests.dummy_config import DummyConfig
 
 # Make imports robust when running the script directly from different working directories.
 # Ensure the repository root and this tests folder are on sys.path so the script can import
@@ -46,11 +48,6 @@ if bin_dir.exists():
         os.environ.setdefault("ARIA2C_PATH", str(aria2c_path))
         print(f"Using local aria2c at: {aria2c_path}")
 
-from src.downloader import PlaylistDownloader
-from tests.dummy_config import DummyConfig
-
-logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
-
 # allow caller to override playlist url via env
 playlist_url = os.getenv("TEST_PLAYLIST_URL")
 if not playlist_url:
@@ -63,8 +60,7 @@ print(f"Using playlist URL: {playlist_url}")
 cfg_base = DummyConfig()
 
 # ensure yt-dlp exists
-import shutil as _sh
-if not _sh.which(str(cfg_base.yt_dlp_path)):
+if not shutil.which(str(cfg_base.yt_dlp_path)):
     print(f"yt-dlp binary not found at '{cfg_base.yt_dlp_path}'. Please install yt-dlp or set YTDLP_PATH environment variable.")
     sys.exit(2)
 
@@ -128,7 +124,7 @@ for mode in MODES:
         # check archive has entries
         archive_file = (save_path / f"archive_{mode}.txt")
         if archive_file.exists():
-            lines = [l for l in archive_file.read_text(encoding='utf-8').splitlines() if l.strip()]
+            lines = [line for line in archive_file.read_text(encoding='utf-8').splitlines() if line.strip()]
             print(f"Archive {archive_file} contains {len(lines)} lines")
             if len(lines) < 3:
                 print(f"Expected archive to contain >=3 lines, found {len(lines)}")

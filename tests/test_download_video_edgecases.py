@@ -1,6 +1,5 @@
 import subprocess
 import shutil
-from pathlib import Path
 
 from src.downloader import PlaylistDownloader
 from tests.dummy_config import DummyConfig
