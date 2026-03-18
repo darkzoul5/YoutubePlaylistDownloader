@@ -64,7 +64,6 @@ jobs:
           $VERSION = "${{ steps.version.outputs.version }}"
           $WORKSPACE = "${{ github.workspace }}"
           New-Item -ItemType Directory -Force -Path "$WORKSPACE/dist/windows/bin"
-          Copy-Item "$WORKSPACE/yt-playlist-main.py" "$WORKSPACE/dist/windows/"
           
           # yt-dlp
           Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "$WORKSPACE/dist/windows/bin/yt-dlp.exe"
@@ -81,8 +80,9 @@ jobs:
           Move-Item "$WORKSPACE/dist/windows/aria2_temp/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$WORKSPACE/dist/windows/bin/aria2c.exe"
           
           # Build .exe using PyInstaller
+          # Use --collect-all ytpld to ensure all submodules and data in the ytpld package are included
           pip install pyinstaller
-          pyinstaller --onefile --name "yt-playlist-downloader" --workpath "$WORKSPACE/build" --specpath "$WORKSPACE" --distpath "$WORKSPACE/dist" --add-data "$WORKSPACE/src;ytpld" "$WORKSPACE/yt-playlist-main.py"
+          pyinstaller --onefile --name "yt-playlist-downloader" --workpath "$WORKSPACE/build" --specpath "$WORKSPACE" --distpath "$WORKSPACE/dist" --collect-all "ytpld" "$WORKSPACE/yt-playlist-main.py"
           Move-Item "$WORKSPACE/dist/yt-playlist-downloader.exe" "$WORKSPACE/dist/windows/yt-playlist-downloader.exe"
 
           # Cleanup & Archive
@@ -96,6 +96,7 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           mkdir -p "$GITHUB_WORKSPACE/dist/linux/bin"
           cp "$GITHUB_WORKSPACE/yt-playlist-main.py" "$GITHUB_WORKSPACE/dist/linux/"
+          cp -r "$GITHUB_WORKSPACE/src" "$GITHUB_WORKSPACE/dist/linux/"
           
           # yt-dlp
           curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o "$GITHUB_WORKSPACE/dist/linux/bin/yt-dlp"
@@ -183,12 +184,14 @@ jobs:
       - name: Prepare Docker build context
         run: |
           cd "$GITHUB_WORKSPACE/dist/linux-docker"
+          # Extract Linux artifact which now contains bin/, src/, and yt-playlist-main.py
           tar -xzf "$GITHUB_WORKSPACE/dist/linux-docker/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz"
+          
+          # Copy Docker-specific files
           cp "$GITHUB_WORKSPACE/Dockerfile" .
           cp "$GITHUB_WORKSPACE/docker-entrypoint.sh" .
           
-          if [ ! -d "src" ]; then cp -r "$GITHUB_WORKSPACE/src" . ; fi
-          # Ensure config directory is present
+          # Ensure config directory is present (not included in Linux zip by default)
           if [ ! -d "config" ]; then cp -r "$GITHUB_WORKSPACE/config" . ; fi
           
           # Debug: List context to verify paths match Dockerfile expectations
