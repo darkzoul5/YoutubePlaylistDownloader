@@ -175,7 +175,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Download Linux Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: linux-release
           path: ${{ github.workspace }}/dist/linux-docker
@@ -223,7 +223,7 @@ jobs:
     if: startsWith(github.event.inputs.tag, 'v')
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ${{ github.workspace }}/artifacts
 
