@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yt-playlist-downloader"
+version = "v1.1.4"
+description = "YouTube playlist downloader"
+readme = "README.md"
+authors = [ { name = "Dark_Zoul" } ]
+license = { file = "LICENSE" }
+keywords = ["youtube", "yt-dlp", "playlist", "downloader"]
+
+[project.urls]
+"Home" = "https://git.darkzoul.org/dark_zoul/youtube-playlist-downloader"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ytplaylist*"]

@@ -1,0 +1,35 @@
+name: Unit tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, Next ]
+  pull_request:
+    branches: [ main, Next ]
+
+jobs:
+  tests:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Create venv and install project
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+          # Install project (editable) and test deps
+          python -m pip install -e .[test] || python -m pip install -e .
+          python -m pip install pytest
+
+      - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          . .venv/bin/activate
+          pytest -q

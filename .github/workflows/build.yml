@@ -1,0 +1,298 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g., v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-windows-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install -y unzip zip curl
+
+      - name: Get version from tag
+        id: version
+        shell: bash
+        run: |
+          VERSION="${{ inputs.tag }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Prepare Windows package
+        run: |
+          set -e
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p "$GITHUB_WORKSPACE/dist/windows/bin"
+          cp "$GITHUB_WORKSPACE/yt-playlist-main.py" "$GITHUB_WORKSPACE/dist/windows/"
+
+          # yt-dlp
+          curl -fL --retry 3 -H "User-Agent: github-actions" \
+            -o "$GITHUB_WORKSPACE/dist/windows/bin/yt-dlp.exe" \
+            https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+
+          # FFmpeg Windows static
+          curl -fL --retry 3 -H "User-Agent: github-actions" \
+            -o "$GITHUB_WORKSPACE/dist/windows/ffmpeg.zip" \
+            https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+          unzip -q "$GITHUB_WORKSPACE/dist/windows/ffmpeg.zip" -d "$GITHUB_WORKSPACE/dist/windows/ffmpeg_temp"
+          mv $(find "$GITHUB_WORKSPACE/dist/windows/ffmpeg_temp" -name ffmpeg.exe | head -n 1) "$GITHUB_WORKSPACE/dist/windows/bin/ffmpeg.exe"
+
+          # aria2c Windows static
+          curl -fL --retry 3 -H "User-Agent: github-actions" \
+            -o "$GITHUB_WORKSPACE/dist/windows/aria2c.zip" \
+            https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
+          unzip "$GITHUB_WORKSPACE/dist/windows/aria2c.zip" -d "$GITHUB_WORKSPACE/dist/windows/"
+          mv "$GITHUB_WORKSPACE/dist/windows/aria2-1.37.0-win-64bit-build1/aria2c.exe" "$GITHUB_WORKSPACE/dist/windows/bin/aria2c.exe"
+
+          rm -rf "$GITHUB_WORKSPACE/dist/windows/ffmpeg_temp" "$GITHUB_WORKSPACE/dist/windows/aria2-1.37.0-win-64bit-build1" "$GITHUB_WORKSPACE/dist/windows/ffmpeg.zip" "$GITHUB_WORKSPACE/dist/windows/aria2c.zip"
+
+          # Create windows archive
+          cd "$GITHUB_WORKSPACE/dist/windows"
+          ZIP_NAME="yt-playlist-windows-${VERSION}.zip"
+          zip -r "$GITHUB_WORKSPACE/$ZIP_NAME" *
+          echo "ZIP_PATH=$GITHUB_WORKSPACE/$ZIP_NAME" >> $GITHUB_ENV
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: ${{ github.workspace }}/yt-playlist-windows-*.zip
+
+  build-linux-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Get version from tag
+        id: version
+        shell: bash
+        run: |
+          VERSION="${{ inputs.tag }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y unzip zip curl wget build-essential pkg-config libssl-dev zlib1g-dev
+
+      - name: Prepare workspace
+        run: |
+          set -e
+          mkdir -p "$GITHUB_WORKSPACE/dist/linux/bin"
+          cp "$GITHUB_WORKSPACE/yt-playlist-main.py" "$GITHUB_WORKSPACE/dist/linux/"
+
+      - name: Download yt-dlp
+        run: |
+          curl -fL --retry 3 -H "User-Agent: github-actions" \
+            -o "$GITHUB_WORKSPACE/dist/linux/bin/yt-dlp" \
+            https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/yt-dlp"
+
+      - name: Download FFmpeg static
+        run: |
+          curl -fL --retry 3 -H "User-Agent: github-actions" \
+            -o "$GITHUB_WORKSPACE/dist/linux/ffmpeg.tar.xz" \
+            https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+          mkdir -p "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp"
+          tar -xf "$GITHUB_WORKSPACE/dist/linux/ffmpeg.tar.xz" -C "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp" --strip-components=1
+          mv "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp/ffmpeg" "$GITHUB_WORKSPACE/dist/linux/bin/ffmpeg"
+          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/ffmpeg"
+      
+      - name: Restore aria2 cache
+        id: aria2-cache
+        uses: actions/cache@v3
+        with:
+          path: dist/linux/bin/aria2c
+          key: aria2c-${{ runner.os }}-1.37.0
+            
+      - name: Build aria2c if not cached
+        if: steps.aria2-cache.outputs.cache-hit != 'true'   
+        run: |
+          set -e
+          mkdir -p "$GITHUB_WORKSPACE/dist/linux/bin"
+
+          mkdir -p "$GITHUB_WORKSPACE/dist/linux/aria2c_build"
+          cd "$GITHUB_WORKSPACE"
+          wget https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.gz
+          tar -xzf aria2-1.37.0.tar.gz
+          cd aria2-1.37.0
+          CFLAGS="-Os -s" LDFLAGS="-static" ./configure \
+            --enable-static --disable-shared \
+            --disable-libaria2 --without-ca-bundle \
+            --without-libnettle --without-libgcrypt \
+            --without-libssh2 --without-libexpat \
+            --without-libxml2 --without-libsqlite3 \
+            --with-openssl
+          make -j"$(nproc)"
+          strip src/aria2c
+          cp src/aria2c "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
+          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/aria2c"
+          rm -rf "$GITHUB_WORKSPACE/dist/linux/aria2c_build" "$GITHUB_WORKSPACE/aria2-1.37.0" "$GITHUB_WORKSPACE/aria2-1.37.0.tar.gz"
+
+
+      - name: Show cache status and bin contents
+        run: |
+          echo "Cache hit: ${{ steps.aria2-cache.outputs.cache-hit }}"
+          echo "Listing dist/linux/bin:" 
+          ls -la dist/linux/bin || true
+
+      - name: Cleanup FFmpeg temp
+        run: rm -rf "$GITHUB_WORKSPACE/dist/linux/ffmpeg_temp" "$GITHUB_WORKSPACE/dist/linux/ffmpeg.tar.xz"
+
+      - name: Archive Linux package
+        run: |
+          set -e
+          VERSION="${{ steps.version.outputs.version }}"
+          cd "$GITHUB_WORKSPACE/dist/linux"
+          TAR_NAME="yt-playlist-linux-${VERSION}.tar.gz"
+          tar -czf "$GITHUB_WORKSPACE/$TAR_NAME" *
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: ${{ github.workspace }}/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
+
+  build-docker-image:
+    runs-on: ubuntu-latest
+    needs: [build-linux-package]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Get version from tag
+        id: version
+        shell: bash
+        run: |
+          VERSION="${{ inputs.tag }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set docker image names
+        run: |
+          echo "RELEASE_IMAGE=ghcr.io/${GITHUB_ACTOR}/ytpld:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+          echo "LATEST_IMAGE=ghcr.io/${GITHUB_ACTOR}/ytpld:latest" >> $GITHUB_ENV
+
+      - name: Download linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-release
+
+      - name: Prepare Docker build context
+        run: |
+          mkdir -p dist/linux-docker
+          cp Dockerfile dist/linux-docker/
+          echo "Copying and extracting Linux artifact..."
+          tar -xzf yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz -C dist/linux-docker/
+          echo "Build context contents:"
+          ls -R dist/linux-docker
+
+      - name: Build Docker image (release)
+        run: docker build dist/linux-docker -t $RELEASE_IMAGE
+
+      - name: Save Docker image as tar (release)
+        run: docker save -o docker-image.tar $RELEASE_IMAGE
+
+      - name: Upload docker-image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: docker-image.tar
+
+      - name: Build Docker image (latest)
+        run: docker build dist/linux-docker --label build_as_latest=true -t $LATEST_IMAGE
+
+      - name: Save Docker image as tar (latest)
+        run: docker save -o docker-image-latest.tar $LATEST_IMAGE
+
+      - name: Upload docker-image-latest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-latest
+          path: docker-image-latest.tar
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build-windows-package, build-linux-package, build-docker-image]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-release
+          path: windows-release
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-release
+          path: linux-release
+      - uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: docker-image
+      - uses: actions/download-artifact@v4
+        with:
+          name: docker-image-latest
+          path: docker-image-latest
+
+      - name: Get version from tag
+        id: version
+        shell: bash
+        run: |
+          VERSION="${{ inputs.tag }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Set docker image names
+        run: |
+          echo "RELEASE_IMAGE=ghcr.io/${GITHUB_ACTOR}/ytpld:${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+          echo "LATEST_IMAGE=ghcr.io/${GITHUB_ACTOR}/ytpld:latest" >> $GITHUB_ENV
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Load and push Docker release image
+        run: |
+          docker load -i docker-image/docker-image.tar
+          docker push $RELEASE_IMAGE
+      - name: Load and push Docker latest image
+        run: |
+          docker load -i docker-image-latest/docker-image-latest.tar
+          docker push $LATEST_IMAGE
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: "Release ${{ steps.version.outputs.version }}"
+          draft: true
+      - name: Upload Windows release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: windows-release/yt-playlist-windows-${{ steps.version.outputs.version }}.zip
+          asset_name: yt-playlist-windows-${{ steps.version.outputs.version }}.zip
+          asset_content_type: application/zip
+      - name: Upload Linux release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: linux-release/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
+          asset_name: yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
+          asset_content_type: application/gzip

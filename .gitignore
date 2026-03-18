@@ -2,9 +2,12 @@
 
 
 #Custom for this project
-yt-playlist-config.json
-/bin
-/config/
+config/yt-playlist-config.json
+/tmp*
+/*/tmp*
+*.code-workspace
+/bin/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

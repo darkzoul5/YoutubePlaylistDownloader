@@ -1,8 +1,11 @@
 # YouTube Playlist Downloader
 
-[![Build Release Packages](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/release.yml)
+[![Build Release](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build.yml)
 
- A cross-platform tool for downloading entire YouTube playlists as MP3 or MP4 files, using [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org/), and [aria2c](https://github.com/aria2/aria2). Includes a GitHub Actions CI/CD workflow for packaging and releasing Windows and Linux binaries.
+[![Unit tests](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml)
+
+A cross-platform tool for downloading entire YouTube playlists as MP3 or MP4 files, using [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org/), and [aria2c](https://github.com/aria2/aria2). Includes Gitea CI/CD workflow for packaging and releasing Windows and Linux binaries.
+
 
 Supports audio, video, or both download modes, music and videos are numbered as they are on your youtube playlist, playlist cleanup, and configurable parallel download options.
 
@@ -110,6 +113,29 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
   - Offer to clean up files that are no longer in the playlist
 
 ---
+ ## CLI flags
+
+When running the script locally (for example `python yt-playlist-main.py`), you can pass the following flags:
+
+- `-c, --config <path>` — Path to a configuration file (relative to the repository `config/` directory by default)
+- `-d, --debug` — Show verbose subprocess output (yt-dlp, ffmpeg, aria2c)
+- `-p, --prune` — Run with pruning (deleting files not present in playlists)
+- `-y, --yes, --non-interactive` — Auto-confirm prompts (used only with `--prune`at the moment)
+
+Examples (local):
+
+```powershell
+# Run with debug output
+python yt-playlist-main.py --debug
+
+# Run non-interactive and prune
+python yt-playlist-main.py --prune --yes
+
+# Use a different config file
+python yt-playlist-main.py --config custom-config.json
+```
+---
+
 
 ## Docker Usage
 
@@ -148,6 +174,27 @@ Run it with:
 ```pwsh
 docker compose up -d
 ```
+
+## Docker Compose — environment variables
+
+You can pass environment variables.
+
+Environment variables
+- `YTPL_DEBUG` (0/1): When set to `1` shows verbose output from external binaries (yt-dlp, ffmpeg, aria2c). Useful for diagnosing failures.
+- `YTPL_PRUNE` (0/1): When set to `1` enables pruning — files that are not present in any configured playlist will be deleted (requires confirmation unless `YTPL_YES` is set).
+- `YTPL_YES` (0/1): Auto-confirm prompts (use with `YTPL_PRUNE` in automated runs).
+- `YTPL_CONFIG`: Path to a config file inside the container (defaults to `/app/config/yt-playlist-config.json` if present).
+- `YTPL_CONFIG_JSON`: Full JSON payload for the entire config. When provided it overwrites `/app/config/yt-playlist-config.json`.
+- `YTPL_PLAYLISTS_JSON`: JSON array used to populate the `playlists` field in the config.
+- `PLAYLIST_{N}_{FIELD}`: Indexed playlist entries. For each playlist index N use `PLAYLIST_N_URL`, `PLAYLIST_N_DOWNLOAD_MODE`, `PLAYLIST_N_SAVE_PATH`, `PLAYLIST_N_ARCHIVE`, etc.
+- `YTPL_MAX_PARALLEL_DOWNLOADS`: Integer, maximum concurrent downloads.
+- `YTPL_ARIA2C_CONNECTIONS`: Integer, connections per download.
+- `YTPL_MAX_VIDEO_QUALITY`: String, e.g., `1080p`, `720p`, `best`.
+- `YTPL_DOWNLOAD_MODE`: `audio`, `video`, or `both` — default download mode applied to playlists that don't set it individually.
+
+Tip
+- Mount a config file for complex setups to avoid long environment variables. Example: `- /host/config/yt-playlist-config.json:/app/config/yt-playlist-config.json`.
+
 
 ## Troubleshooting
 
