@@ -186,10 +186,13 @@ jobs:
           tar -xzf "$GITHUB_WORKSPACE/dist/linux-docker/yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz"
           cp "$GITHUB_WORKSPACE/Dockerfile" .
           cp "$GITHUB_WORKSPACE/docker-entrypoint.sh" .
-          # Ensure ytpld package is present from src/
+          
           if [ ! -d "src" ]; then cp -r "$GITHUB_WORKSPACE/src" . ; fi
           # Ensure config directory is present
           if [ ! -d "config" ]; then cp -r "$GITHUB_WORKSPACE/config" . ; fi
+          
+          # Debug: List context to verify paths match Dockerfile expectations
+          ls -R
 
       - name: Set docker image names
         run: |
