@@ -8,7 +8,6 @@ It will run three modes: audio, video, and both. It is intentionally opt-in to a
 """
 import os
 import sys
-import logging
 import shutil
 import time
 from pathlib import Path
