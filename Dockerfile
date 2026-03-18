@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copy application code (package) and bootstrap
 COPY yt-playlist-main.py /app/
-COPY ytpld/ /app/ytpld/
+COPY src/ /app/ytpld/
 COPY config/ /app/config/
 
 # Copy helper binaries from the build context (which includes extracted artifacts)

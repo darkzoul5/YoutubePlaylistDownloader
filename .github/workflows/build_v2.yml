@@ -81,7 +81,7 @@ jobs:
           
           # Build .exe using PyInstaller
           pip install pyinstaller
-          pyinstaller --onefile --name "yt-playlist-downloader" --add-data "ytpld;ytpld" yt-playlist-main.py
+          pyinstaller --onefile --name "yt-playlist-downloader" --add-data "src;ytpld" yt-playlist-main.py
           Move-Item "dist/yt-playlist-downloader.exe" "dist/windows/yt-playlist-downloader.exe"
 
           # Cleanup & Archive
@@ -144,8 +144,8 @@ jobs:
           tar -xzf yt-playlist-linux-${{ steps.version.outputs.version }}.tar.gz
           cp ../../Dockerfile .
           cp ../../docker-entrypoint.sh .
-          # Ensure ytpld package is present
-          if [ ! -d "ytpld" ]; then cp -r ../../ytpld . ; fi
+          # Ensure ytpld package is present from src/
+          if [ ! -d "src" ]; then cp -r ../../src . ; fi
 
       - name: Set docker image names
         run: |
