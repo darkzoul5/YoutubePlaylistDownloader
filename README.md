@@ -1,10 +1,11 @@
 # YouTube Playlist Downloader
 
-[![Build Release](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build.yml/badge.svg?branch=next)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build.yml)
+[![Build Release](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build.yml)
 
-[![Unit tests](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml/badge.svg?branch=next)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml)
+[![Unit tests](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml)
 
 A cross-platform tool for downloading entire YouTube playlists as MP3 or MP4 files, using [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org/), and [aria2c](https://github.com/aria2/aria2). Includes Gitea CI/CD workflow for packaging and releasing Windows and Linux binaries.
+
 
 Supports audio, video, or both download modes, music and videos are numbered as they are on your youtube playlist, playlist cleanup, and configurable parallel download options.
 
@@ -20,7 +21,7 @@ Supports audio, video, or both download modes, music and videos are numbered as 
 - **Cleanup of tracks:** Option to remove files not in playlist anymore, with confirmation.
 - **Configurable output paths** and archive tracking.
 - **Cross-platform:** Windows and Linux support.
-- **Gitea CI/CD workflow** for automated packaging and release.
+- **GitHub Actions CI/CD workflow** for automated packaging and release.
 
 ---
 
@@ -36,7 +37,7 @@ Supports audio, video, or both download modes, music and videos are numbered as 
 
 1. **Download the latest release:**
 
-- Go to the [Releases](https://git.darkzoul.org/dark_zoul/YouTube-Playlist-Downloader/releases) page.
+- Go to the [Releases](https://github.com/darkzoul5/YoutubePlaylistDownloader/releases) page.
   - Download the appropriate archive for your platform (Windows or Linux).
 
 1. **Unzip the archive:**
@@ -75,7 +76,7 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
     {
       "url": "https://www.youtube.com/playlist?list=playlistidhere",
       "download_mode": "audio",         
-      "max_video_quality": "1080p"
+      "max_video_quality": "1080p",
       "save_path": "./music",
       "archive": "archive.txt",
     }
@@ -135,6 +136,7 @@ python yt-playlist-main.py --config custom-config.json
 ```
 ---
 
+
 ## Docker Usage
 
 You can run YouTube Playlist Downloader using the official Docker image.
@@ -142,7 +144,7 @@ You can run YouTube Playlist Downloader using the official Docker image.
 ### Run the container
 
 ```pwsh
-docker run --rm -v /path/to/downloads:/app/downloads -v /path/to/config:/app/config git.darkzoul.org/dark_zoul/youtube-playlist-downloader:latest
+docker run -v /path/to/downloads:/app/downloads -v /path/to/config:/app/config ghcr.io/dark_zoul/ytpld:latest
 ```
 
 Replace `/path/to/downloads` and `/path/to/config` with your local directories.
@@ -159,7 +161,7 @@ Create a `docker-compose.yml` with the following content (replace the host paths
 ```yaml
 services:
   yt-downloader:
-    image: git.darkzoul.org/dark_zoul/youtube-playlist-downloader:latest
+    image: ghcr.io/dark_zoul/ytpld:latest
     container_name: yt-downloader
     restart: no
     volumes:
