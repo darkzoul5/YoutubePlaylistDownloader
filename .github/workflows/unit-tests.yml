@@ -3,9 +3,9 @@ name: Unit tests
 on:
   workflow_dispatch:
   push:
-    branches: [ main, Next ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, Next ]
+    branches: [ main ]
 
 jobs:
   tests:
