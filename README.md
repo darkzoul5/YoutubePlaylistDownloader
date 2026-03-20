@@ -3,11 +3,9 @@
 [![Build Release](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build_v2.yml/badge.svg)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/build_v2.yml)
 [![Unit tests](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/darkzoul5/YoutubePlaylistDownloader/actions/workflows/unit-tests.yml)
 
-A cross-platform tool for downloading entire YouTube playlists as MP3 or MP4 files, using [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org/), and [aria2c](https://github.com/aria2/aria2). Includes Gitea CI/CD workflow for packaging and releasing Windows and Linux binaries.
+A cross-platform tool for downloading entire YouTube playlists as MP3 or MP4 files, using [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ffmpeg](https://ffmpeg.org/), and [aria2](https://github.com/aria2/aria2). Includes Gitea CI/CD workflow for packaging and releasing Windows and Linux binaries.
 
 Supports audio, video, or both download modes, music and videos are numbered as they are on your youtube playlist, playlist cleanup, and configurable parallel download options.
-
----
 
 ## Features
 
@@ -21,13 +19,9 @@ Supports audio, video, or both download modes, music and videos are numbered as 
 - **Cross-platform:** Windows and Linux support.
 - **GitHub Actions CI/CD workflow** for automated packaging and release.
 
----
-
 ## Requirements
 
 - Python 3.8+
-
----
 
 ## Installation
 
@@ -46,12 +40,12 @@ Supports audio, video, or both download modes, music and videos are numbered as 
 
 - Open `yt-playlist-config.json` and adjust paths, playlist URLs, download mode, and quality as needed.
 
-1. **Run the downloader:**
+1. **Run ytpld:**
 
 - On Windows:
 
     ```sh
-    python yt-playlist-main.py
+    yt-playlist-main.exe
     ```
 
 - On Linux:
@@ -59,8 +53,6 @@ Supports audio, video, or both download modes, music and videos are numbered as 
     ```sh
     python3 yt-playlist-main.py
     ```
-
----
 
 ## Usage
 
@@ -98,9 +90,8 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
 
 ### Running
 
-- Just run the script with Python:
-  - On Windows: `python yt-playlist-main.py`
-  - On Linux: `python3 yt-playlist-main.py`
+- On Windows: `yt-playlist-main.exe`
+- On Linux: `python3 yt-playlist-main.py`
 
 - The downloader will:
   - Check for required tools and update yt-dlp automatically
@@ -110,18 +101,16 @@ Edit `yt-playlist-config.json` to specify playlists, paths, and options:
   - Avoid re-downloading files you've already downloaded
   - Offer to clean up files that are no longer in the playlist
 
----
-
 ## CLI flags
 
-When running the script locally (for example `python yt-playlist-main.py`), you can pass the following flags:
+When running the script via python (for example `python yt-playlist-main.py`), you can pass the following flags:
 
 - `-c, --config <path>` — Path to a configuration file (relative to the repository `config/` directory by default)
 - `-d, --debug` — Show verbose subprocess output (yt-dlp, ffmpeg, aria2c)
 - `-p, --prune` — Run with pruning (deleting files not present in playlists)
 - `-y, --yes, --non-interactive` — Auto-confirm prompts (used only with `--prune`at the moment)
 
-Examples (local):
+Examples:
 
 ```powershell
 # Run with debug output
@@ -133,8 +122,6 @@ python yt-playlist-main.py --prune --yes
 # Use a different config file
 python yt-playlist-main.py --config custom-config.json
 ```
-
----
 
 ## Docker Usage
 
@@ -160,7 +147,7 @@ Create a `docker-compose.yml` with the following content (replace the host paths
 ```yaml
 services:
   yt-downloader:
-    image: ghcr.io/dark_zoul/ytpld:latest
+    image: ghcr.io/dark_zoul5/ytpld:latest
     container_name: yt-downloader
     restart: no
     volumes:
@@ -215,4 +202,4 @@ See [LICENSE](LICENSE).
 
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 - [ffmpeg](https://ffmpeg.org/)
-- [aria2c](https://github.com/aria2/aria2)
+- [aria2](https://github.com/aria2/aria2)
