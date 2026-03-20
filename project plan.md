@@ -3,8 +3,8 @@
 ## Subject Area
 
 - Tool for downloading and synchronizing YouTube playlists.
-- Focuses on reliable batch downloading, format selection (audio and/or video), configurable quality and keeping local copies synced with playlist changes.
-- Targets power users and archivists who need large-scale, repeatable playlist archiving and ongoing synchronization, with GUI interfaces.
+- Focuses on batch downloading, format selection (audio and/or video), configurable quality and keeping local copies synced with playlist changes.
+- Targets power users and archivists who need large-scale, repeatable playlist archiving and ongoing synchronization, with GUI interface.
 
 ## Problem
 
@@ -18,38 +18,33 @@ Individuals who need to download a large number of videos or audio files from a 
 
 ## Functionality Definition
 
-- Can download:
-  - Video only
-  - Audio only
-  - Both video and audio
-- Can update the playlist (download only newly added videos)
-- Can delete videos that are no longer in the playlist
-- Has configuration for:
-  - Quality
-  - Download type (audio, video)
-  - Save directory
-  - Use of aria2c
-  - aria2-related settings
-  - GUI settings
+- Multi-format Download:
+  - Video only (mp4)
+  - Audio only (mp3)
+  - Both video and audio (mp3 & mp4)
+- Smart Synchronization:
+  - Archive tracking (prevents re-downloading existing media)
+  - Playlist Pruning (automatically deletes local files no longer in the YouTube playlist)
+  - Sequential Renumbering (keeps local files sorted by playlist position)
+- Advanced Configuration:
+  - Per-playlist settings (Quality, paths, archive file)
+  - Global performance options (Parallel downloads, aria2c threading)
+  - Path management for yt-dlp, ffmpeg, and aria2c (Docker-aware)
+- GUI Integration:
+  - Real-time status updates via backend API
+  - Visual configuration editor
+  - Modern, responsive Qt-based interface
 
-## GUI
+## Platforms
 
-- Has buttons for all features
-- Allows adjusting all settings from the GUI
-- Modern Design
+- Desktop: Windows (Primary), Linux
+- Docker
+- Possible Future: Web App, Android App (via shared FastAPI backend)
 
-## Platform
+## Architecture & Languages
 
-- Desktop application
-- Optional:
-  - Web App
-  - Android App
-
-## Languages
-
-- Backend
-  - Python
-- Frontend
-  - qt ?
-  - Tkinter?
+- Core Engine: Python (yt-dlp wrapper)
+- Backend API: FastAPI (Local localhost-only boundary)
+- Desktop Frontend: PySide6 (Qt for Python)
+- Distribution: PyInstaller / Briefcase (Windows .exe, Linux AppImage)
   

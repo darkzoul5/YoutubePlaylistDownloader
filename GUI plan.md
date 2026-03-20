@@ -1,13 +1,24 @@
-### Python-first
+ 
+### Python-first Desktop Architecture
 
-- Primary GUI framework: `PySide6` (Qt for Python) — native desktop look, cross-platform on Windows and Linux, mature widget set, good documentation.
-- Desktop architecture: keep the core downloader logic as a Python package and expose a local HTTP/WebSocket API (e.g., `FastAPI`) that the GUI talks to. The GUI stays a thin client that issues commands and receives status updates.
+- **Primary GUI framework**: `PySide6` (Qt for Python).
+- **Communication Layer**: A local `FastAPI` backend to separate core logic from the UI.
+- **IPC Mechanism**: The GUI spawns the FastAPI server on a random high port (binding to `127.0.0.1` ONLY) and communicates via REST/WebSockets.
 
-### Why this approach
+### Core Features to Implement
 
-- Stay in Python end-to-end for now, minimizing new languages or runtimes.
-- A local API boundary lets you reuse the same backend for a future Web frontend (React/Next.js or plain SPA) and for Android (native or Flutter shell that talks to the API or a hosted API).
-- `PySide6` provides a polished native desktop UX and easier packaging for Windows/Linux compared with Python mobile toolkits.
+1. **Dashboard Overview**: List all tracked playlists, their status (Last Sync), and total size.
+2. **Interactive Configuration**: Wizard-style setup for new playlists (URL detection, folder picker).
+3. **Queue Manager**: Visual progress bars for active downloads, showing speed, ETA, and current video title.
+4. **Log Viewer**: Real-time streaming of yt-dlp logs for troubleshooting.
+5. **Settings Panel**: Global settings for binary paths (ffmpeg, aria2c), max parallel jobs, and Docker detection toggle.
+
+### Phase 1 Roadmap: "The Bridge"
+
+- [ ] **Refactor `src/manager.py`**: Convert CLI-first execution to async-compatible methods for FastAPI consumption.
+- [ ] **FastAPI Integration**: Create endpoints for `/playlists`, `/status`, and `/download/start`.
+- [ ] **PySide6 Skeleton**: Basic window with `QWebEngine` (if hybrid) or native `QWidget` dashboard.
+- [ ] **Packaging**: `pyinstaller` configuration to bundle both backend and frontend into a single `.exe`.
 
 ### Packaging & Distribution (brief)
 
