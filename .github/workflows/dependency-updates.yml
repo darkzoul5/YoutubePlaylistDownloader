@@ -52,7 +52,7 @@ jobs:
           python3 -c 'from pathlib import Path; import os; path = Path(".github/workflows/build_v2.yml"); text = path.read_text(encoding="utf-8"); version = os.environ["ARIA2_VERSION"]; updated = text.replace("release-1.37.0", f"release-{version}").replace("aria2-1.37.0", f"aria2-{version}").replace("aria2c-linux-1.37.0", f"aria2c-linux-{version}"); path.write_text(updated, encoding="utf-8") if updated != text else None; print(f"Updated aria2 references to {version}." if updated != text else "No aria2 references changed.")'
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: refresh aria2 build pins"
