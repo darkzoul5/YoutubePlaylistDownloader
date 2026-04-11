@@ -1,0 +1,64 @@
+name: dependency-updates
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-bundled-binaries:
+    name: Refresh pinned build dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Discover latest aria2 release
+        id: aria2
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          latest_version="$(
+            git ls-remote --tags --refs https://github.com/aria2/aria2.git 'refs/tags/release-*' \
+              | awk -F/ '{print $NF}' \
+              | sed 's/^release-//' \
+              | sort -V \
+              | tail -n 1
+          )"
+
+          if [ -z "$latest_version" ]; then
+            echo "Unable to determine the latest aria2 release." >&2
+            exit 1
+          fi
+
+          echo "version=$latest_version" >> "$GITHUB_OUTPUT"
+
+      - name: Update release workflow pins
+        shell: bash
+        env:
+          ARIA2_VERSION: ${{ steps.aria2.outputs.version }}
+        run: |
+          set -euo pipefail
+          python3 -c 'from pathlib import Path; import os; path = Path(".github/workflows/build_v2.yml"); text = path.read_text(encoding="utf-8"); version = os.environ["ARIA2_VERSION"]; updated = text.replace("release-1.37.0", f"release-{version}").replace("aria2-1.37.0", f"aria2-{version}").replace("aria2c-linux-1.37.0", f"aria2c-linux-{version}"); path.write_text(updated, encoding="utf-8") if updated != text else None; print(f"Updated aria2 references to {version}." if updated != text else "No aria2 references changed.")'
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: refresh aria2 build pins"
+          title: "Refresh aria2 build pins"
+          body: |
+            Automated maintenance update for the bundled aria2 release references used by the release workflow.
+          branch: dependency-updates/aria2
+          delete-branch: true
+          labels: dependencies, maintenance
