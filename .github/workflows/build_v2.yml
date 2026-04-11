@@ -154,7 +154,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/dist/linux" && tar -czf "$GITHUB_WORKSPACE/yt-playlist-linux-$VERSION.tar.gz" *
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -215,7 +215,7 @@ jobs:
         working-directory: ${{ github.workspace }}/dist/linux-docker
 
       - name: Upload Docker artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: docker-images
           path: ${{ github.workspace }}/dist/linux-docker/docker-image*.tar
