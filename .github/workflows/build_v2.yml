@@ -112,7 +112,7 @@ jobs:
       - name: Cache aria2c binary (Linux)
         if: matrix.platform == 'linux'
         id: aria2-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ github.workspace }}/dist/linux/bin/aria2c
           key: aria2c-linux-1.37.0
