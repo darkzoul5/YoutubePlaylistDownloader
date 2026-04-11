@@ -1,6 +1,5 @@
 #!/bin/sh
 # Entry point for the ytplaylist container.
-# Converts environment variables into CLI flags and execs the Python CLI.
 
 set -e
 
