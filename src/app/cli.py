@@ -11,6 +11,7 @@ from .core.sync.executor import ActionExecutor
 from .core.events.event_bus import EventBus
 import re
 from .core.utils.yt import extract_playlist_id
+from .core.utils.deps import DependencyError
 
 
 def main(argv: list[str] | None = None) -> int:
