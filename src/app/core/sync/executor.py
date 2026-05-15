@@ -130,6 +130,8 @@ class ActionExecutor:
                     d["video"] = a.to_name
 
             ffmpeg_cfg = str(playlist_cfg.get("ffmpeg_path", "ffmpeg")) if playlist_cfg.get("ffmpeg_path") is not None else None
+            temp_video_root = video_root / ".tmp"
+            temp_video_root.mkdir(parents=True, exist_ok=True)
 
             for a in actions:
                 if a.type != SyncActionType.DOWNLOAD or not a.item or not a.to_name:
@@ -161,19 +163,39 @@ class ActionExecutor:
 
                 # Normal single-output path
                 is_audio = a.to_name.endswith(".mp3")
-                root = audio_root if is_audio else video_root
-                output_path = root / a.to_name
-                output_path.parent.mkdir(parents=True, exist_ok=True)
                 url = f"https://www.youtube.com/watch?v={vid}"
-                job = DownloadJob(
-                    item=a.item,
-                    output_path=output_path,
-                    url=url,
-                    mode=("audio" if is_audio else "video"),
-                    ffmpeg_path=ffmpeg_cfg,
-                )
-                jobs.append(job)
-                await queue.enqueue(job)
+
+                if is_audio:
+                    # Audio-only: download video to temp, extract mp3, then delete video
+                    audio_path = audio_root / a.to_name
+                    audio_path.parent.mkdir(parents=True, exist_ok=True)
+                    # build temp video filename from audio base
+                    temp_base = a.to_name.rsplit(".", 1)[0] + ".mp4"
+                    video_temp = temp_video_root / temp_base
+                    job = DownloadJob(
+                        item=a.item,
+                        output_path=video_temp,
+                        url=url,
+                        mode="video",
+                        ffmpeg_path=ffmpeg_cfg,
+                        audio_output_path=audio_path,
+                        keep_video=False,
+                    )
+                    jobs.append(job)
+                    await queue.enqueue(job)
+                else:
+                    # Video-only
+                    video_path = video_root / a.to_name
+                    video_path.parent.mkdir(parents=True, exist_ok=True)
+                    job = DownloadJob(
+                        item=a.item,
+                        output_path=video_path,
+                        url=url,
+                        mode="video",
+                        ffmpeg_path=ffmpeg_cfg,
+                    )
+                    jobs.append(job)
+                    await queue.enqueue(job)
         finally:
             await queue._queue.join()  # wait for all jobs
             await queue.stop()

@@ -22,6 +22,12 @@ class Downloader:
             # Optional local audio extraction when requested
             if job.mode == "video" and job.audio_output_path is not None:
                 await self._extract_audio(job)
+                # Remove the video if requested (audio-only mode)
+                if not job.keep_video and job.output_path:
+                    try:
+                        job.output_path.unlink(missing_ok=True)
+                    except Exception:
+                        pass
             job.state = JobState.COMPLETED
         except Exception as exc:  # pragma: no cover - environment dependent
             job.state = JobState.FAILED
