@@ -4,10 +4,8 @@
       "url": "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID_HERE",
       "download_mode": "audio",
       "max_video_quality": "1080p",
-      "save_path": "./downloads",
-      "archive": "archive.txt"
+      "save_path": "./downloads"
     }
   ],
-  "yt_dlp_path": "./bin/yt-dlp",
-  "ffmpeg_path": "./bin/ffmpeg"
+  "ffmpeg_path": "./ffmpeg"
 }
