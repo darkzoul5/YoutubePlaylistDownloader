@@ -62,6 +62,16 @@ class Database:
         )
         return {row["video_id"]: row for row in cur.fetchall()}
 
+    def upsert_playlist(self, *, id: str, name: str | None, url: str, path: str, mode: str, auto_sync: int = 0, sync_interval_minutes: int = 0) -> None:
+        sql = (
+            "INSERT INTO playlists (id, name, url, path, mode, auto_sync, sync_interval_minutes, last_sync) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, NULL) "
+            "ON CONFLICT(id) DO UPDATE SET name=excluded.name, url=excluded.url, path=excluded.path, mode=excluded.mode, "
+            "auto_sync=excluded.auto_sync, sync_interval_minutes=excluded.sync_interval_minutes"
+        )
+        with self._conn:
+            self._conn.execute(sql, (id, name, url, path, mode, auto_sync, sync_interval_minutes))
+
     def update_local_filename(self, playlist_id: str, video_id: str, local_filename: str | None) -> None:
         with self._conn:
             self._conn.execute(
