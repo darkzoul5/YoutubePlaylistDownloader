@@ -7,6 +7,31 @@ A cross-platform tool for downloading entire YouTube playlists as MP3 or MP4 fil
 
 Supports audio, video, or both download modes, music and videos are numbered as they are on your youtube playlist, playlist cleanup, and configurable parallel download options.
 
+## New: Sync CLI (MVP)
+
+State-driven sync client is under active development. Current backend MVP includes:
+
+- Scanner (yt-dlp extract-only), diff engine, safe renames, recycle deletions
+- Async download queue (yt-dlp Python API) with simple retry
+- SQLite metadata (playlist/items) and state updates on actions
+
+Run (compute only):
+
+```bash
+python -m src.app.cli
+```
+
+Apply actions:
+
+```bash
+python -m src.app.cli --apply
+```
+
+Notes:
+- Config: `config/yt-playlist-config.json` (same keys as before; `playlists[].url`, `download_mode`, `save_path`)
+- DB: `app/data/app.db` (auto-created)
+- Requires Python ≥ 3.10 and `yt-dlp`; `ffmpeg` recommended for audio
+
 ## Features
 
 - **Download full YouTube playlists** as high-quality MP3 (audio), MP4 (video), or both.
