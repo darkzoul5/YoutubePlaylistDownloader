@@ -51,7 +51,7 @@ def main(argv: list[str] | None = None) -> int:
         if msg not in seen_errors:
             seen_errors.add(msg)
             # Friendly hint for missing ffmpeg
-            if "ffprobe and ffmpeg not found" in msg.lower():
+            if "ffmpeg not found" in msg.lower():
                 print("ERROR: ffmpeg not found. Install ffmpeg or set 'ffmpeg_path' in config.")
             else:
                 print(f"ERROR: {msg}")

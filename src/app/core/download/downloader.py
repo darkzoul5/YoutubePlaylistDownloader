@@ -52,38 +52,19 @@ class Downloader:
                     pass
 
             outtmpl = str(job.output_path)
-            if job.mode == "audio":
-                ydl_opts = {
-                    "format": "bestaudio/best",
-                    "outtmpl": outtmpl,
-                    "postprocessors": [
-                        {
-                            "key": "FFmpegExtractAudio",
-                            "preferredcodec": "mp3",
-                            "preferredquality": "0",
-                        }
-                    ],
-                    "noplaylist": True,
-                    "quiet": True,
-                    "no_warnings": True,
-                    "logger": _QuietLogger(),
-                }
-            else:  # video
-                ydl_opts = {
-                    "format": "bestvideo+bestaudio/best",
-                    "merge_output_format": "mp4",
-                    "outtmpl": outtmpl,
-                    "noplaylist": True,
-                    "quiet": True,
-                    "no_warnings": True,
-                    "logger": _QuietLogger(),
-                }
 
-            # Prefer job-provided path first
-            if job.ffmpeg_path:
-                ydl_opts["ffmpeg_location"] = job.ffmpeg_path
-            elif self.ffmpeg_path:
-                ydl_opts["ffmpeg_location"] = self.ffmpeg_path
+            # All modes download a single muxed mp4 when possible.
+            # This avoids any ffmpeg-driven merging during the download step, satisfying:
+            #   - video: "original file, no processing"
+            #   - audio/both: extraction is done separately after download
+            ydl_opts = {
+                "format": "best[ext=mp4][acodec!=none][vcodec!=none]/best[ext=mp4]",
+                "outtmpl": outtmpl,
+                "noplaylist": True,
+                "quiet": True,
+                "no_warnings": True,
+                "logger": _QuietLogger(),
+            }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore[attr-defined]
                 ydl.download([job.url])

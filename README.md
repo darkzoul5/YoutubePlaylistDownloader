@@ -20,7 +20,7 @@ Local-first YouTube playlist synchronization client.
 
 - Python 3.10+
 - `yt-dlp` (pip)
-- `ffmpeg` (for audio extraction)
+- `ffmpeg` (only needed for audio extraction / "both" mode)
 
 Install:
 
@@ -44,6 +44,11 @@ Create/edit `config/yt-playlist-config.json`:
   "ffmpeg_path": "./ffmpeg"
 }
 ```
+
+`download_mode`:
+- `video`: download playlist videos as muxed `.mp4` (no ffmpeg processing)
+- `audio`: download muxed `.mp4`, extract `.mp3`, delete the `.mp4`
+- `both`: download muxed `.mp4`, extract `.mp3`, keep both files
 
 ## Run
 

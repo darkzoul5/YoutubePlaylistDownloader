@@ -55,9 +55,11 @@ class ActionExecutor:
         # yt-dlp is required for any download job (Python API usage)
         ensure_yt_dlp_available()
 
-        # ffmpeg/ffprobe are required for merges and audio extraction; check once up-front
-        ffmpeg_hint = playlist_cfg.get("ffmpeg_path", "ffmpeg")
-        ensure_ffmpeg_available(str(ffmpeg_hint) if ffmpeg_hint is not None else None)
+        # ffmpeg is only required when we will extract audio (audio/both modes)
+        needs_audio = any((a.to_name or "").lower().endswith(".mp3") for a in actions if a.type == SyncActionType.DOWNLOAD)
+        if needs_audio:
+            ffmpeg_hint = playlist_cfg.get("ffmpeg_path", "ffmpeg")
+            ensure_ffmpeg_available(str(ffmpeg_hint) if ffmpeg_hint is not None else None)
 
     async def _apply_renames(self, actions: Iterable[SyncAction], audio_root: Path, video_root: Path, playlist_cfg: dict) -> None:
         playlist_id = extract_playlist_id(playlist_cfg.get("url", "")) or playlist_cfg.get("url", "")

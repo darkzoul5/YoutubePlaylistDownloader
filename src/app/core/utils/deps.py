@@ -52,7 +52,8 @@ def _resolve_tool_paths(tool_hint: Optional[str], exe_name: str) -> Tuple[Option
     - Otherwise, treat tool_hint as a command and fall back to PATH resolution.
     """
     if tool_hint:
-        hint = Path(tool_hint)
+        hint_str = str(tool_hint).strip().strip('"').strip("'")
+        hint = Path(hint_str)
         # Expand envvars (%FFMPEG%) etc.
         expanded = Path(os.path.expandvars(str(hint)))
         if expanded.is_dir():
@@ -71,31 +72,22 @@ def _resolve_tool_paths(tool_hint: Optional[str], exe_name: str) -> Tuple[Option
 
 def ensure_ffmpeg_available(ffmpeg_hint: Optional[str]) -> Tuple[str, str]:
     """
-    Ensures both ffmpeg and ffprobe are runnable. Returns (ffmpeg_path, ffprobe_path).
+    Ensures ffmpeg is runnable. Returns (ffmpeg_path, ffmpeg_path).
+
+    Note: ffprobe is intentionally not required. This project uses ffmpeg directly for
+    audio extraction, and yt-dlp can still function for muxed downloads without ffprobe.
     """
     ffmpeg_exe = "ffmpeg.exe" if sys.platform.startswith("win") else "ffmpeg"
-    ffprobe_exe = "ffprobe.exe" if sys.platform.startswith("win") else "ffprobe"
 
     ffmpeg_path, ffmpeg_dir = _resolve_tool_paths(ffmpeg_hint, ffmpeg_exe)
     if not ffmpeg_path:
         raise DependencyError("ffmpeg not found. Install ffmpeg or set 'ffmpeg_path' in config.")
 
-    # For ffprobe prefer the same directory if we have one
-    ffprobe_path = None
-    if ffmpeg_dir:
-        cand = Path(ffmpeg_dir) / ffprobe_exe
-        if cand.exists():
-            ffprobe_path = str(cand)
-    if not ffprobe_path:
-        ffprobe_path, _ = _resolve_tool_paths(None, ffprobe_exe)
-    if not ffprobe_path:
-        raise DependencyError("ffprobe not found (usually ships with ffmpeg). Install ffmpeg or fix 'ffmpeg_path'.")
-
     # Smoke test (fast)
     try:
         subprocess.run([ffmpeg_path, "-version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run([ffprobe_path, "-version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as exc:
-        raise DependencyError("ffmpeg/ffprobe exist but are not runnable. Check permissions/architecture/path.") from exc
+        raise DependencyError("ffmpeg exists but is not runnable. Check permissions/architecture/path.") from exc
 
-    return ffmpeg_path, ffprobe_path
+    # Keep return shape stable for existing callers
+    return ffmpeg_path, ffmpeg_path
