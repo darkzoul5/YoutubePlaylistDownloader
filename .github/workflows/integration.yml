@@ -15,11 +15,24 @@ jobs:
     runs-on: ubuntu-latest
     env:
       INTEGRATION_TEST: '1'
-      TEST_PLAYLIST_URL: 'https://www.youtube.com/playlist?list=PLUmRr21IDW9WCW87FnbWAbIwwZHbf-lAz'
+      # Used by the integration tests to locate ffmpeg reliably.
+      FFMPEG_PATH: '/usr/bin/ffmpeg'
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install system deps
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
 
       - name: Make bundled linux binaries executable (if present)
         run: |
@@ -35,14 +48,10 @@ jobs:
           python3 -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
-          # Install project in editable mode. If the 'test' extra exists, prefer it.
-          python -m pip install -e .[test] || python -m pip install -e .
-          python -m pip install pytest
+          python -m pip install -e .[dev] || python -m pip install -e .
 
-      - name: Run integration script directly
-        env:
-          YTPL_DEBUG: '1'
+      - name: Run integration tests
         run: |
           set -euo pipefail
           . .venv/bin/activate
-          python tests/integration_full_workflow_test.py
+          pytest -m integration
