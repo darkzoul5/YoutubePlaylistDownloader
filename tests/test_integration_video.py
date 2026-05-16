@@ -4,9 +4,9 @@ import os
 
 import pytest
 
-from src.app.core.database.db import Database
-from src.app.core.sync.executor import ActionExecutor
-from src.app.core.sync.service import SyncService
+from app.core.database.db import Database
+from app.core.sync.executor import ActionExecutor
+from app.core.sync.service import SyncService
 
 
 PLAYLIST_URL = os.getenv("TEST_PLAYLIST_URL")

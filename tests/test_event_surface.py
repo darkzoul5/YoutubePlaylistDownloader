@@ -4,11 +4,11 @@ import asyncio
 import sys
 from pathlib import Path
 
-from src.app.core.download.downloader import Downloader
-from src.app.core.download.queue_manager import DownloadJob
-from src.app.core.events.event_bus import EventBus
-from src.app.core.models import PlaylistItem, SyncAction, SyncActionType
-from src.app.core.sync.executor import ActionExecutor
+from app.core.download.downloader import Downloader
+from app.core.download.queue_manager import DownloadJob
+from app.core.events.event_bus import EventBus
+from app.core.models import PlaylistItem, SyncAction, SyncActionType
+from app.core.sync.executor import ActionExecutor
 
 
 def test_executor_emits_sync_events(tmp_path):
@@ -82,4 +82,3 @@ def test_downloader_progress_hook_calls_callback(tmp_path, monkeypatch):
 
     assert callbacks
     assert any("progress" in c for c in callbacks)
-

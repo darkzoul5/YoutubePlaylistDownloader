@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.app.core.download.downloader import Downloader
+from app.core.download.downloader import Downloader
 
 
 def test_build_format_defaults_to_best_mp4():

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 
-from src.app.config.settings import Settings
+from app.config.settings import Settings
 
 
 def test_settings_creates_root_config_if_missing(tmp_path, monkeypatch):

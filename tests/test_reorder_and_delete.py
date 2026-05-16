@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.app.core.models import PlaylistItem, SyncAction, SyncActionType
-from src.app.core.sync.executor import ActionExecutor
-from src.app.core.sync.reorder import safe_multi_rename
+from app.core.models import PlaylistItem, SyncAction, SyncActionType
+from app.core.sync.executor import ActionExecutor
+from app.core.sync.reorder import safe_multi_rename
 
 
 def test_safe_multi_rename_swaps_files(tmp_path: Path):
@@ -43,4 +43,3 @@ def test_executor_deletes_to_recycle(tmp_path: Path):
     assert not victim.exists()
     recycled = save_root / ".recycle" / "audio" / victim.name
     assert recycled.exists()
-

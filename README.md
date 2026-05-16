@@ -80,19 +80,19 @@ Queue / retry:
 - Compute-only:
 
 ```bash
-python -m src.app.cli
+python -m app.cli
 ```
 
 - Apply actions:
 
 ```bash
-python -m src.app.cli --apply
+python -m app.cli --apply
 ```
 
 - Single playlist (0-based index):
 
 ```bash
-python -m src.app.cli --apply --playlist 0
+python -m app.cli --apply --playlist 0
 ```
 
 ## Data & Layout
