@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ytplst"
+name = "ytpl-Sync"
 version = "1.1.1"
 description = "YouTube playlist Sync Thing"
 readme = "README.md"
@@ -18,7 +18,7 @@ dependencies = [
 gui = [
     "PySide6"
 ]
-dev = [
+test = [
     "pytest",
     "ruff",
     "black"
@@ -28,11 +28,11 @@ dev = [
 Home = "https://github.com/darkzoul5/YoutubePlaylistSyncThing"
 
 [project.scripts]
-ytplst = "ytplst.main:main"
+ytpl-Sync = "ytpl-Sync.main:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["ytplst*"]
+include = ["ytpl-Sync*"]
