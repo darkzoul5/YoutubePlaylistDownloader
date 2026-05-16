@@ -5,8 +5,8 @@ from src.app.core.download.downloader import Downloader
 
 def test_build_format_defaults_to_best_mp4():
     fmt = Downloader.build_format(None)
-    assert "height<=" not in fmt
-    assert "best[ext=mp4]" in fmt
+    assert "height<=1080" in fmt
+    assert fmt.endswith("/best[ext=mp4]")
 
 
 def test_build_format_applies_height_cap():

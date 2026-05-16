@@ -37,13 +37,19 @@ Create/edit `config/yt-playlist-config.json`:
   "playlists": [
     {
       "url": "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID",
-      "download_mode": "audio",
+      "download_mode": "video",
       "max_download_quality": "1080p",
       "save_path": "./downloads"
     }
   ]
 }
 ```
+
+Defaults:
+- `ffmpeg_path`: `./bin/ffmpeg.exe` (Windows) or `./bin/ffmpeg` (Linux)
+- `download_mode`: `video`
+- `max_download_quality`: `1080p`
+- `save_path`: `./downloads`
 
 `max_download_quality`:
 

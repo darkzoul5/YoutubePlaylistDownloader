@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
+def _default_ffmpeg_path() -> str:
+    if os.name == "nt":
+        return "./bin/ffmpeg.exe"
+    return "./bin/ffmpeg"
+
+
 DEFAULT_CONFIG: Dict[str, Any] = {
     "playlists": [],
-    "download_mode": "audio",
+    "download_mode": "video",
     "max_download_quality": "1080p",
     "save_path": "./downloads",
-    "ffmpeg_path": "ffmpeg",
+    "ffmpeg_path": _default_ffmpeg_path(),
 }
 
 
@@ -40,12 +47,12 @@ class Settings:
             "playlists": [
                 {
                     "url": "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID",
-                    "download_mode": "audio",
+                    "download_mode": "video",
                     "max_download_quality": "1080p",
                     "save_path": "./downloads",
                 }
             ],
-            "ffmpeg_path": "ffmpeg",
+            "ffmpeg_path": _default_ffmpeg_path(),
         }
         path.write_text(json.dumps(default_payload, indent=2) + "\n", encoding="utf-8")
 

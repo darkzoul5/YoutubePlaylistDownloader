@@ -1,11 +1,11 @@
 {
+  "ffmpeg_path": "./bin/ffmpeg.exe",
   "playlists": [
     {
       "url": "https://www.youtube.com/playlist?list=YOUR_PLAYLIST_ID_HERE",
-      "download_mode": "audio",
+      "download_mode": "video",
       "max_download_quality": "1080p",
       "save_path": "./downloads"
     }
-  ],
-  "ffmpeg_path": "./ffmpeg"
+  ]
 }

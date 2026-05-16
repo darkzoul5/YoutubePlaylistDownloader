@@ -19,12 +19,16 @@ class Downloader:
     def build_format(max_download_quality) -> str:
         def parse_height_cap(value) -> int | None:
             if value is None:
-                return None
+                return 1080
             if isinstance(value, int):
                 return value if value > 0 else None
             s = str(value).strip().lower()
-            if not s or s in {"best", "max", "auto", "none", "null"}:
+            if not s:
+                return 1080
+            if s in {"best", "max", "auto"}:
                 return None
+            if s in {"none", "null"}:
+                return 1080
             digits = "".join(ch for ch in s if ch.isdigit())
             if not digits:
                 return None
