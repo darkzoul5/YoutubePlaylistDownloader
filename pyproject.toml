@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ytpl-Sync"
+name = "ytpl-sync"
 version = "1.1.1"
 description = "YouTube playlist Sync Thing"
 readme = "README.md"
@@ -28,11 +28,11 @@ test = [
 Home = "https://github.com/darkzoul5/YoutubePlaylistSyncThing"
 
 [project.scripts]
-ytpl-Sync = "ytpl-Sync.main:main"
+ytpl-sync = "app.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["ytpl-Sync*"]
+include = ["app*"]
