@@ -6,6 +6,7 @@ import pytest
 
 from app.core.database.db import Database
 from app.core.sync.executor import ActionExecutor
+from app.core.events.event_bus import EventBus
 from app.core.sync.service import SyncService
 
 
@@ -17,6 +18,12 @@ def _require_integration():
         pytest.skip("Set INTEGRATION_TEST=1 to enable real download tests")
     if not PLAYLIST_URL:
         pytest.skip("Set TEST_PLAYLIST_URL to enable real download tests")
+
+
+def _skip_if_bot_check(errors: list[str]) -> None:
+    msg = "\n".join(errors).lower()
+    if "sign in to confirm you’re not a bot" in msg or "sign in to confirm you're not a bot" in msg:
+        pytest.skip("YouTube bot-check blocked download; provide cookies to yt-dlp to run this test reliably")
 
 
 @pytest.mark.integration
@@ -49,11 +56,21 @@ def test_integration_download_video(tmp_path):
     subset = [a for a in subset if (a.to_name or "").endswith(".mp4")]
     assert subset
 
-    executor = ActionExecutor(db, concurrency=1)
+    errors: list[str] = []
+    bus = EventBus()
+
+    async def on_failed(payload):
+        errors.append(str(payload.get("error", "")))
+
+    bus.subscribe("DownloadFailed", on_failed)
+
+    executor = ActionExecutor(db, concurrency=1, event_bus=bus)
     import asyncio
 
     asyncio.run(executor.execute(subset, cfg))
 
     video_dir = save_path / "video"
     assert video_dir.exists()
-    assert any(p.suffix.lower() == ".mp4" for p in video_dir.glob("*.mp4"))
+    if not any(p.suffix.lower() == ".mp4" for p in video_dir.glob("*.mp4")):
+        _skip_if_bot_check(errors)
+        assert False
