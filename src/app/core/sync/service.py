@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 from pathlib import Path
 from typing import List
 
@@ -9,7 +8,7 @@ from ..models import PlaylistItem, SyncAction
 from ..scanner.playlist_scanner import PlaylistScanner
 from ..sync.diff_engine import DiffEngine
 from ..sync.filesystem import list_files
-from ..utils.naming import make_filename, sanitize_title
+from ..utils.naming import sanitize_title
 from ..utils.yt import extract_playlist_id
 
 
@@ -26,11 +25,11 @@ class SyncService:
             return [".mp4"]
         if mode == "both":
             return [".mp3", ".mp4"]
-        return [".mp3"]
+        return [".mp4"]
 
     def sync_from_config(self, playlist_cfg: dict) -> List[SyncAction]:
         url: str = playlist_cfg.get("url")
-        mode: str = playlist_cfg.get("download_mode", "audio")
+        mode: str = playlist_cfg.get("download_mode", "video")
         save_path = Path(playlist_cfg.get("save_path", "./downloads")).resolve()
         save_path.mkdir(parents=True, exist_ok=True)
 
@@ -45,7 +44,8 @@ class SyncService:
             auto_sync=int(bool(playlist_cfg.get("auto_sync", False))),
             sync_interval_minutes=int(playlist_cfg.get("sync_interval_minutes", 0) or 0),
         )
-        items = self.scanner.scan(url, playlist_id)
+        ffmpeg_cfg = playlist_cfg.get("ffmpeg_path")
+        items = self.scanner.scan(url, playlist_id, ffmpeg_path=str(ffmpeg_cfg) if ffmpeg_cfg is not None else None)
 
         sanitized: List[PlaylistItem] = []
         for it in items:
@@ -119,19 +119,3 @@ class SyncService:
             merged_actions.extend(actions)
 
         return merged_actions
-        for ext in exts:
-            mode_dir = "audio" if ext == ".mp3" else "video"
-            fs_root = (save_path / mode_dir)
-            fs_entries = list_files(fs_root, [ext])
-            actions = self.diff.compute_actions(sanitized, db_index, fs_entries, ext)
-            merged_actions.extend(actions)
-
-        return [
-            {
-                "type": a.type,
-                "video_id": a.item.video_id if a.item else None,
-                "from_name": a.from_name,
-                "to_name": a.to_name,
-            }
-            for a in merged_actions
-        ]
