@@ -65,9 +65,6 @@ jobs:
           $WORKSPACE = "${{ github.workspace }}"
           New-Item -ItemType Directory -Force -Path "$WORKSPACE/dist/windows/bin"
           
-          # yt-dlp
-          Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "$WORKSPACE/dist/windows/bin/yt-dlp.exe"
-          
           # FFmpeg
           Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "$WORKSPACE/dist/windows/ffmpeg.zip"
           Expand-Archive "$WORKSPACE/dist/windows/ffmpeg.zip" -DestinationPath "$WORKSPACE/dist/windows/ffmpeg_temp"
@@ -93,10 +90,6 @@ jobs:
           cp "$GITHUB_WORKSPACE/yt-playlist-main.py" "$GITHUB_WORKSPACE/dist/linux/"
           cp -r "$GITHUB_WORKSPACE/src" "$GITHUB_WORKSPACE/dist/linux/"
           
-          # yt-dlp
-          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o "$GITHUB_WORKSPACE/dist/linux/bin/yt-dlp"
-          chmod +x "$GITHUB_WORKSPACE/dist/linux/bin/yt-dlp"
-
           # FFmpeg (static)
           curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o "$GITHUB_WORKSPACE/ffmpeg.tar.xz"
           mkdir -p "$GITHUB_WORKSPACE/ffmpeg_temp"
