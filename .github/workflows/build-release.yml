@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to create (e.g., v0.1.0)"
+        description: "Tag to create (e.g., v2.0.0)"
         required: true
         default: "v2.0.0"
         type: string
@@ -123,14 +123,14 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          pyinstaller --noconfirm --onefile --name "ytpl-sync" --distpath "dist/pyinstaller" --workpath "build/pyinstaller" --specpath "build/pyinstaller" --paths "src" "ytpl-sync-entry.py"
+          pyinstaller --noconfirm --onefile --noconsole --name "ytpl-sync" --distpath "dist/pyinstaller" --workpath "build/pyinstaller" --specpath "build/pyinstaller" --paths "src" "ytpl-sync-entry.py"
 
       - name: Build binary (Linux)
         if: runner.os == 'Linux'
         shell: bash
         run: |
           set -euo pipefail
-          pyinstaller --noconfirm --onefile --name "ytpl-sync" --distpath "dist/pyinstaller" --workpath "build/pyinstaller" --specpath "build/pyinstaller" --paths "src" "ytpl-sync-entry.py"
+          pyinstaller --noconfirm --onefile --noconsole --name "ytpl-sync" --distpath "dist/pyinstaller" --workpath "build/pyinstaller" --specpath "build/pyinstaller" --paths "src" "ytpl-sync-entry.py"
 
       - name: Stage package
         shell: bash
