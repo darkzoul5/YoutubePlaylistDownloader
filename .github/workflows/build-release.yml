@@ -94,7 +94,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        ffmpeg: [bundled, system]
+        ffmpeg: [bundled, none]
 
     steps:
       - uses: actions/checkout@v6
